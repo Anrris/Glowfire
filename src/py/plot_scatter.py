@@ -12,7 +12,7 @@ colors = ['red', 'green', 'blue', 'brown', 'black', 'orange', 'purple', 'gray']
 infile = open(sys.argv[1], 'r')
 count = 0
 for line in infile.readlines():
-    if count % 10 == 0:
+    if count % 100 == 0:
         line_split = line.split()
         cluster_id = int(line_split[0])
         x = float(line_split[2])

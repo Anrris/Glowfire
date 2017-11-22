@@ -39,18 +39,19 @@ namespace LGM
         RtreeFeature_s      mRtreeFeature_s;
         CentroidList        mCentroidList;
 
-        AxisType            centroid_distance;
-
     public:
-        LgmClassifier() = default;
+        LgmClassifier():
+            mRtreeRoot(),
+            mRtreeFeature_s(),
+            mCentroidList()
+        {}
 
         void append_feature(Feature feature) {
             mRtreeFeature_s.push_back(RtreeFeature(feature));
             mRtreeRoot.insert({mRtreeFeature_s.back(), mRtreeRoot.size()});
         }
 
-        auto run_cluster(AxisType _centroid_distance, AxisType ratio_of_minimum_diff = 0.01) -> size_t {
-            centroid_distance = _centroid_distance;
+        auto run_cluster(AxisType centroid_distance, AxisType ratio_of_minimum_diff = 0.01) -> size_t {
             mCentroidList.clear();
 
             const auto minimum_diff = centroid_distance * ratio_of_minimum_diff;
@@ -83,8 +84,7 @@ namespace LGM
                             {mRtreeRoot,
                              mRtreeFeature_s,
                              centroidFeature,
-                             centroid_distance
-                            }
+                             centroid_distance}
                     );
 
                     centroidStringSet.insert(centroidKey);
@@ -98,7 +98,14 @@ namespace LGM
             // ----------------------------------------------------
             // Second part: Optimize centroid
             // ----------------------------------------------------
-            auto cleanUpCentroidCollision = [&](){
+            auto optimizeCentroid = [&](){
+                bool needUpdate = true;
+                for(auto & centroid: mCentroidList){
+                    centroid.updateMean(minimum_diff);
+                    needUpdate = needUpdate && centroid.needUpdateMean();
+                }
+
+                // Clean up centroid collision.
                 mCentroidList.sort([](Centroid & L, Centroid & R){return L.count() > R.count();});
 
                 CentroidRtree   centroidRtreeRoot;
@@ -124,21 +131,10 @@ namespace LGM
                     }
                 }
 
-            };
-            auto optimizeCentroidMean = [&](){
-                bool needUpdate = true;
-                double diff = 0;
-                for(auto & centroid: mCentroidList){
-                    diff = centroid.updateMean(minimum_diff);
-                    needUpdate = needUpdate && centroid.needUpdateMean();
-                }
-
-                cleanUpCentroidCollision();
-
                 return needUpdate;
             };
 
-            while(optimizeCentroidMean()){ }
+            while(optimizeCentroid()){ }
 
             // ----------------------------------------------------
             // Third part: Calculate covariance matrix
