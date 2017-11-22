@@ -13,7 +13,7 @@ set(SOURCE_FILES
         src/cpp/lgm_classifier.h
         src/cpp/lgm_factory.h
         src/cpp/lgm_base.h
-        src/include/lgm.h)
+        include/lgm.h)
 
 set (PYTHON_FILES
         src/py/cluster_generator.py
@@ -24,8 +24,7 @@ find_package(Boost 1.65.0)
 
 set(INCLUDE_DIR
         /usr/local/Cellar/eigen/3.3.4/include/eigen3
-        src/cpp
-        src/include)
+        include)
 include_directories(${INCLUDE_DIR})
 
 add_executable(LocalGaussianModel ${SOURCE_FILES} ${PYTHON_FILES})

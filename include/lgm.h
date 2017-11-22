@@ -6,7 +6,7 @@
 #ifndef LOCALGAUSSIANMODEL_LGM_H
 #define LOCALGAUSSIANMODEL_LGM_H
 
-#include "../cpp/lgm_classifier.h"
-#include "../cpp/lgm_factory.h"
+#include "../src/cpp/lgm_classifier.h"
+#include "../src/cpp/lgm_factory.h"
 
 #endif //LOCALGAUSSIANMODEL_LGM_H
