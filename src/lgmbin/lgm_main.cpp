@@ -30,7 +30,7 @@ int main(){
         classifier.append_feature(feature);
 
     // Run the cluster algorithm with separation = 7.0.
-    classifier.run_cluster(7.0);
+    classifier.run_cluster(8.0);
 
     // Save classified cluster (with cluster-id) to file.
     auto outfile = ofstream("predict.csv");

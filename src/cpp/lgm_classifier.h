@@ -36,7 +36,7 @@ namespace LGM
 
     private:
         Rtree               mRtreeRoot;
-        RtreeFeature_s   mRtreeRtreeFeature_s;
+        RtreeFeature_s      mRtreeFeature_s;
         CentroidList        mCentroidList;
 
         AxisType            centroid_distance;
@@ -45,8 +45,8 @@ namespace LGM
         LgmClassifier() = default;
 
         void append_feature(Feature feature) {
-            mRtreeRtreeFeature_s.push_back(RtreeFeature(feature));
-            mRtreeRoot.insert({mRtreeRtreeFeature_s.back(), mRtreeRoot.size()});
+            mRtreeFeature_s.push_back(RtreeFeature(feature));
+            mRtreeRoot.insert({mRtreeFeature_s.back(), mRtreeRoot.size()});
         }
 
         auto run_cluster(AxisType _centroid_distance, AxisType ratio_of_minimum_diff = 0.01) -> size_t {
@@ -81,7 +81,7 @@ namespace LGM
                 if(centroidStringSet.find(centroidKey) == centroidStringSet.end()){
                     mCentroidList.push_front(
                             {mRtreeRoot,
-                             mRtreeRtreeFeature_s,
+                             mRtreeFeature_s,
                              centroidFeature,
                              centroid_distance
                             }
@@ -91,7 +91,7 @@ namespace LGM
                 }
             };
 
-            for(auto & iter: mRtreeRtreeFeature_s){
+            for(auto & iter: mRtreeFeature_s){
                 createCentroidFromRtreeFeature(iter);
             }
 
