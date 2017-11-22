@@ -8,7 +8,7 @@ Where I introduced a novel clustering algorithm, named Local Gaussian Model (LGM
 Academic research of using this algorithm including the source code must reference this arXiv article.
 
 
-#### How to use LGM ###
+### How to use LGM ###
 
 The followings are the major API component:
 
@@ -35,7 +35,7 @@ auto score_dict = classifier.calc_score(feature);
 
 A typicle example can be found in ```lgmbin/lgm_main.cpp```
 
-#### How to generate a set of testing data ? ###
+### How to generate a set of testing data ? ###
 Execute the following python script which located inside the py folder:
 ```bash
 $ ./cluster_generator.py
@@ -49,7 +49,9 @@ $ ./plot_scatter.py  predict.csv
 ```
 where the rand.csv can be generated from the exectuable of ```lgm_main.cpp```.
 
-#### How do I get set up? ###
+### How do I get set up? ###
 
-The source code is entirely written in C++ header files, one just need to include the ```"lgm.h"``` file from the ```include``` directory of this repository.
+* This library depends on the "boost" and "Eigen" C++ library. Please download these library yourself and setup correspond library path for them.
+
+* The source code is entirely written in C++ header files, one just need to include the ```"lgm.h"``` file from the ```include``` directory of this repository.
 
