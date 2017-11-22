@@ -6,17 +6,11 @@
 #ifndef LOCALGAUSSIANMODEL_LGM_BASE_H
 #define LOCALGAUSSIANMODEL_LGM_BASE_H
 
-//#pragma warning(push, 0)
 #include <string>                               /* STL Library*/
 #include <sstream>                              /* STL Library*/
 #include <iostream>                             /* STL Library*/
-#include <algorithm>                            /* STL Library*/
 #include <vector>                               /* STL Library*/
 #include <list>                                 /* STL Library*/
-#include <cmath>                                /* STL Library*/
-#include <fstream>                              /* STL Library*/
-#include <ctime>                                /* STL Library*/
-#include <unordered_map>                        /* STL Library*/
 #include <unordered_set>                        /* STL Library*/
 #include <functional>                           /* STL Library*/
 #include <memory>                               /* STL Library*/
@@ -27,11 +21,8 @@
 #include <boost/geometry/geometries/point.hpp>  /* Boost Library */
 #include <boost/geometry/geometries/box.hpp>    /* Boost Library */
 #include <boost/geometry/index/rtree.hpp>       /* Boost Library */
-#include <boost/fusion/include/for_each.hpp>    /* Boost Library */
-#include <boost/fusion/include/as_vector.hpp>   /* Boost Library */
-#include <boost/mpl/for_each.hpp>               /* Boost Library */
+
 #include <Eigen/Dense>                          /* Eigen Library: For matrix operation*/
-//#pragma warning(pop)
 
 namespace LGM{
 
@@ -39,7 +30,6 @@ namespace LGM{
     namespace bg  = boost::geometry;
     namespace bgm = boost::geometry::model;
     namespace bgi = boost::geometry::index;
-    namespace fus = boost::fusion;
 
     template<typename AxisType>
     class LgmBase

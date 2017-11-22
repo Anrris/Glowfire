@@ -6,7 +6,6 @@
 #ifndef LOCAL_GAUSSIAN_MODEL_H
 #define LOCAL_GAUSSIAN_MODEL_H
 
-
 #include "lgm_base.h"
 
 namespace LGM
@@ -152,7 +151,7 @@ namespace LGM
         }
 
         auto calc_score(const Feature & feature) -> map<AxisType, size_t, std::greater<AxisType>> {
-            // This method will return an descending order map
+            // This method will return a descending order map
             // Where this map contain a [key: value] pair of [calculated-score: cluster-id]
             // The cluster-id are all positive integers
 
