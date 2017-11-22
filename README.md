@@ -40,10 +40,12 @@ Execute the following python script which located inside the py folder:
 ```bash
 $ ./cluster_generator.py
 ```
+Will generate ```rand.csv``` and ```rand.mc``` files.
+Where "rand.csv" is a set of several gaussian clusters and "rand.mc" is the covariant matrix of them.
 
 One can also use the ```plot_scatter.py``` to plot the classified data set with a given cluster-id.
 ```bash
-$ ./plot_scatter.py  rand.csv
+$ ./plot_scatter.py  predict.csv
 ```
 where the rand.csv can be generated from the exectuable of ```lgm_main.cpp```.
 
