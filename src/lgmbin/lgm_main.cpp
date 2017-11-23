@@ -30,14 +30,14 @@ int main(){
     auto classifier = LGM::LgmClassifier<double,2>();
 
     size_t Index;
-    double axis_0, axis_1;
+    double dummy, axis_0, axis_1;
 
 
     cout << "Feature loading : ";
     cout << measure<>::execution([&](){
 
         auto infile = ifstream("rand.csv");
-        while( infile >> Index >> axis_0 >> axis_1 )
+        while( infile >> Index >> dummy >> axis_0 >> axis_1 )
             feature_s.push_back({axis_0, axis_1});
         infile.close();
 
@@ -58,53 +58,59 @@ int main(){
     cout << " msec"<< endl;
 
 
-    cout << "Execute clustering algorithm : ";
-    cout << measure<>::execution([&](){
+    //cout << "Execute clustering algorithm : ";
+    //cout << measure<>::execution([&](){
+    //    // run cluster algorithm
+    //});
+    //cout << " msec"<< endl;
+    classifier.run_cluster(10.0);
+    auto scorer10 = classifier.create_scorer();
+    classifier.run_cluster(5.0);
+    auto scorer5 = classifier.create_scorer();
 
-        // run cluster algorithm
-        classifier.run_cluster(8.0);
+    auto saveToFile = [&](LGM::LgmClassifier<double,2>::Scorer & scorer, string filename){
+        vector<size_t> cluster_id_s;
+        vector<vector<double>> result_s;
+        cout << "Predict score and classify : ";
+        cout << measure<>::execution([&](){
 
-    });
-    cout << " msec"<< endl;
+            for(auto & feature: feature_s){
+                auto score_dict = scorer.calc_score(feature);
 
+                cluster_id_s.push_back(score_dict.begin()->second);
 
-    vector<size_t> cluster_id_s;
-    vector<vector<double>> result_s;
-    cout << "Predict score and classify : ";
-    cout << measure<>::execution([&](){
+                vector<double> predict = {score_dict.begin()->first};
+                for(auto & elem: feature){
+                    predict.push_back(elem);
+                }
 
-        for(auto & feature: feature_s){
-            auto score_dict = classifier.calc_score(feature);
-
-            cluster_id_s.push_back(score_dict.begin()->second);
-
-            vector<double> predict = {score_dict.begin()->first};
-            for(auto & elem: feature){
-                predict.push_back(elem);
+                result_s.push_back(predict);
             }
 
-            result_s.push_back(predict);
-        }
+        });
+        cout << " msec"<< endl;
 
-    });
-    cout << " msec"<< endl;
+        cout << "Save to file : ";
+        cout << measure<>::execution([&](){
+            auto outfile = ofstream(filename);
 
-    cout << "Save to file : ";
-    cout << measure<>::execution([&](){
-        auto outfile = ofstream("predict.csv");
-
-        for(size_t i=0; i<cluster_id_s.size(); i++){
-            outfile << cluster_id_s[i] << " ";
+            for(size_t i=0; i<cluster_id_s.size(); i++){
+                outfile << cluster_id_s[i] << " ";
             auto & predict = result_s[i];
             for(auto & elem: predict) outfile << elem << " ";
             outfile << endl;
         }
 
         outfile.close();
-    });
-    cout << " msec"<< endl;
+        });
+        cout << " msec"<< endl;
+    };
 
+    //cout << scorer5.cluser_count() << endl;
+    //cout << scorer10.cluser_count() << endl;
 
+    saveToFile(scorer5, "predict5.csv");
+    saveToFile(scorer10, "predict10.csv");
 
     return 0;
 }

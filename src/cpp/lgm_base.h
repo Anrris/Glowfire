@@ -352,9 +352,37 @@ namespace LGM{
         //===================================
 
         typedef typename Centroid::CentroidList         CentroidList;
+        typedef shared_ptr<CentroidList>                CentroidListPtr;
         typedef typename Centroid::CentroidListIterator CentroidListIterator;
         typedef typename Centroid::CentroidRtreeValue   CentroidRtreeValue;
         typedef typename Centroid::CentroidRtree        CentroidRtree;
+
+        class Scorer{
+            CentroidListPtr mCentroidListPtr;
+        public:
+            Scorer(){}
+            Scorer(CentroidListPtr centroidListPtr):
+                mCentroidListPtr(centroidListPtr)
+            {}
+            auto calc_score(const Feature & feature) -> map<AxisType, size_t, std::greater<AxisType>>
+            {
+                // This method will return a descending order map
+                // Where this map contain a [key: value] pair of [calculated-score: cluster-id]
+                // The cluster-id are all positive integers
+
+                auto retval = map<AxisType, size_t, std::greater<AxisType>>();
+
+                size_t centroid_index = 0;
+                for(auto & iter: *mCentroidListPtr){
+                    auto score = iter.scoreOfFeature(feature);
+                    retval[score] = centroid_index;
+                    centroid_index++;
+                }
+                return retval;
+            }
+
+            auto cluser_count() -> size_t { return mCentroidListPtr->size(); }
+        };
     };
 }
 

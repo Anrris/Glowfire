@@ -48,7 +48,7 @@ class NDRandClusterGenerator(object):
         out = open(filename+".csv", 'w')
         for row in self.point_collections:
             (cluster, data) = row
-            out.write(str(cluster)+" ")
+            out.write(str(cluster)+" 1 ")
             for elem in data:
                 out.write(str(elem) + " ")
             out.write('\n')
@@ -76,15 +76,15 @@ class NDRandClusterGenerator(object):
 
 if __name__ == "__main__":
     test = NDRandClusterGenerator(2)
-    test.seed_in_range(mean=(0, 0),  count=30000, diag=(3, 3), offdiag=(1, 1))
-    test.seed_in_range(mean=(10, 0), count=30000, diag=(3, 3), offdiag=(1, 2))
-    test.seed_in_range(mean=(0, 10), count=30000, diag=(3, 3), offdiag=(2, 1))
-    test.seed_in_range(mean=(10, 10),count=30000, diag=(3, 3), offdiag=(1, 2))
-    test.seed_in_range(mean=(20, 15),count=30000, diag=(3, 3), offdiag=(1, 2))
-    test.seed_in_range(mean=(20, 30),count=30000, diag=(3, 3), offdiag=(1, 2))
-    test.seed_in_range(mean=(20, 40),count=30000, diag=(6, 6), offdiag=(3, 2))
+    test.seed_in_range(mean=(0,   0),count=30000, diag=(3, 3), offdiag=(1, 1))
+    test.seed_in_range(mean=(11,  2),count=20000, diag=(3, 3), offdiag=(1, 2))
+    test.seed_in_range(mean=(3,  10),count=40000, diag=(3, 3), offdiag=(2, 1))
+    test.seed_in_range(mean=(12, 12),count=20000, diag=(3, 3), offdiag=(1, 2))
+    test.seed_in_range(mean=(23, 15),count=30000, diag=(3, 3), offdiag=(1, 2))
+    test.seed_in_range(mean=(25, 30),count=20000, diag=(3, 3), offdiag=(1, 2))
+    test.seed_in_range(mean=(22, 40),count=40000, diag=(6, 6), offdiag=(3, 2))
     test.seed_in_range(mean=(10, 40),count=30000, diag=(6, 6), offdiag=(3, 2))
-    test.seed_in_range(mean=(44, 40),count=30000, diag=(4, 7), offdiag=(3, 2))
-    test.seed_in_range(mean=(44, 32),count=30000, diag=(4, 7), offdiag=(3, 2))
+    test.seed_in_range(mean=(44, 40),count=20000, diag=(4, 7), offdiag=(3, 2))
+    test.seed_in_range(mean=(34, 10),count=50000, diag=(2, 8), offdiag=(3, 2))
 
     test.save_data("rand")

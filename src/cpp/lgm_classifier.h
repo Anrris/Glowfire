@@ -29,22 +29,24 @@ namespace LGM
 
         typedef typename LgmTypeCollect::Centroid               Centroid;
         typedef typename LgmTypeCollect::CentroidList           CentroidList;
+        typedef typename LgmTypeCollect::CentroidListPtr        CentroidListPtr;
         typedef typename LgmTypeCollect::CentroidListIterator   CentroidListIterator;
         typedef typename LgmTypeCollect::CentroidRtree          CentroidRtree;
+
+        typedef typename LgmTypeCollect::Scorer                 Scorer;
 
         typedef unordered_set<string>                           CentroidStringSet;
 
     private:
         Rtree               mRtreeRoot;
         RtreeFeature_s      mRtreeFeature_s;
-        CentroidList        mCentroidList;
+        CentroidListPtr     mCentroidListPtr;
 
     public:
         LgmClassifier():
             mRtreeRoot(),
-            mRtreeFeature_s(),
-            mCentroidList()
-        {}
+            mRtreeFeature_s()
+        { }
 
         void append_feature(Feature feature) {
             mRtreeFeature_s.push_back(RtreeFeature(feature));
@@ -52,7 +54,7 @@ namespace LGM
         }
 
         auto run_cluster(AxisType centroid_distance, AxisType ratio_of_minimum_diff = 0.01) -> size_t {
-            mCentroidList.clear();
+            mCentroidListPtr = make_shared<CentroidList>();
 
             const auto minimum_diff = centroid_distance * ratio_of_minimum_diff;
 
@@ -80,7 +82,7 @@ namespace LGM
                 }
 
                 if(centroidStringSet.find(centroidKey) == centroidStringSet.end()){
-                    mCentroidList.push_front(
+                    mCentroidListPtr->push_front(
                             {mRtreeRoot,
                              mRtreeFeature_s,
                              centroidFeature,
@@ -98,22 +100,22 @@ namespace LGM
             // ----------------------------------------------------
             // Second part: Optimize centroid
             // ----------------------------------------------------
-            auto optimizeCentroid = [&](){
+            auto optimizeCentroidPtr = [&](){
                 bool needUpdate = true;
-                for(auto & centroid: mCentroidList){
+                for(auto & centroid: *mCentroidListPtr){
                     centroid.updateMean(minimum_diff);
                     needUpdate = needUpdate && centroid.needUpdateMean();
                 }
 
                 // Clean up centroid collision.
-                mCentroidList.sort([](Centroid & L, Centroid & R){return L.count() > R.count();});
+                mCentroidListPtr->sort([](Centroid & L, Centroid & R){return L.count() > R.count();});
 
                 CentroidRtree   centroidRtreeRoot;
 
-                for(auto c_iter = mCentroidList.begin(); c_iter != mCentroidList.end(); c_iter++){
+                for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end(); c_iter++){
                     centroidRtreeRoot.insert({c_iter->getPoint(), c_iter});
                 }
-                for(auto c_iter = mCentroidList.begin(); c_iter != mCentroidList.end(); c_iter++){
+                for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end(); c_iter++){
                     vector<CentroidRtreeValue> result_s;
                     centroidRtreeRoot.query(
                         bgi::intersects(
@@ -126,7 +128,7 @@ namespace LGM
                         auto cmp = rs_iter.second;
                         if(c_iter->count() >= cmp->count() && c_iter != rs_iter.second){
                             centroidRtreeRoot.remove({cmp->getPoint(), cmp});
-                            mCentroidList.erase(cmp);
+                            mCentroidListPtr->erase(cmp);
                         }
                     }
                 }
@@ -134,16 +136,16 @@ namespace LGM
                 return needUpdate;
             };
 
-            while(optimizeCentroid()){ }
+            while(optimizeCentroidPtr()){ }
 
             // ----------------------------------------------------
             // Third part: Calculate covariance matrix
             // ----------------------------------------------------
-            for(auto & centroid: mCentroidList){
+            for(auto & centroid: *mCentroidListPtr){
                 centroid.updateCovariantMatrix();
             }
 
-            return mCentroidList.size();
+            return mCentroidListPtr->size();
         }
 
         auto calc_score(const Feature & feature) -> map<AxisType, size_t, std::greater<AxisType>> {
@@ -151,16 +153,19 @@ namespace LGM
             // Where this map contain a [key: value] pair of [calculated-score: cluster-id]
             // The cluster-id are all positive integers
 
-            auto retval = map<AxisType, size_t, std::greater<AxisType>>();
+            auto scorer = Scorer(mCentroidListPtr);
+            //auto retval = map<AxisType, size_t, std::greater<AxisType>>();
 
-            size_t centroid_index = 0;
-            for(auto & iter: mCentroidList){
-                auto score = iter.scoreOfFeature(feature);
-                retval[score] = centroid_index;
-                centroid_index++;
-            }
-            return retval;
+            //size_t centroid_index = 0;
+            //for(auto & iter: *mCentroidListPtr){
+            //    auto score = iter.scoreOfFeature(feature);
+            //    retval[score] = centroid_index;
+            //    centroid_index++;
+            //}
+            //return retval;
+            return scorer.calc_score(feature);
         }
+        auto create_scorer() -> Scorer { return Scorer(mCentroidListPtr); }
     };
     //-----------------------------------
     //--- Implementation of LgmClassifier
