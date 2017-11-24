@@ -33,7 +33,7 @@ Return the score of a feature from the classifier:
 auto score_dict = classifier.calc_score(feature);
 ```
 
-A typicle example can be found in ```lgmbin/lgm_main.cpp```
+A typicle example can be found in ```lgmbin/api-demo.cpp```
 
 ### How to generate a set of testing data ? ###
 Execute the following python script which located inside the py folder:
