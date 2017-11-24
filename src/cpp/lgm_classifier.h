@@ -154,15 +154,6 @@ namespace LGM
             // The cluster-id are all positive integers
 
             auto scorer = Scorer(mCentroidListPtr);
-            //auto retval = map<AxisType, size_t, std::greater<AxisType>>();
-
-            //size_t centroid_index = 0;
-            //for(auto & iter: *mCentroidListPtr){
-            //    auto score = iter.scoreOfFeature(feature);
-            //    retval[score] = centroid_index;
-            //    centroid_index++;
-            //}
-            //return retval;
             return scorer.calc_score(feature);
         }
         auto create_scorer() -> Scorer { return Scorer(mCentroidListPtr); }

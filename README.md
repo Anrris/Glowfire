@@ -45,9 +45,9 @@ Where "rand.csv" is a set of several gaussian clusters and "rand.mc" is the cova
 
 One can also use the ```plot_scatter.py``` to plot the classified data set with a given cluster-id.
 ```bash
-$ ./plot_scatter.py  predict.csv
+$ ./plot_scatter.py  api-demo_predict.csv
 ```
-where the rand.csv can be generated from the exectuable of ```lgm_main.cpp```.
+where the api-demo_predict.csv can be generated from the exectuable of ```api-demo.cpp```.
 
 ### How do I get set up? ###
 

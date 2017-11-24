@@ -8,8 +8,14 @@ project(LocalGaussianModel)
 
 set (CMAKE_CXX_STANDARD 11)
 
+
+set(performance_test
+        src/lgmbin/perf-test.cpp)
+
+set(api_demo
+        src/lgmbin/api-demo.cpp)
+
 set(SOURCE_FILES
-        src/lgmbin/lgm_main.cpp
         src/cpp/lgm_classifier.h
         src/cpp/lgm_factory.h
         src/cpp/lgm_base.h
@@ -27,5 +33,6 @@ set(INCLUDE_DIR
         include)
 include_directories(${INCLUDE_DIR})
 
-add_executable(LocalGaussianModel ${SOURCE_FILES} ${PYTHON_FILES})
+add_executable(perf-test ${performance_test} ${SOURCE_FILES} ${PYTHON_FILES})
+add_executable(api-demo ${api_demo} ${SOURCE_FILES})
 

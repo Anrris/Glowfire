@@ -25,7 +25,13 @@ struct measure
 };
 
 int main(){
+    /*
+     * The perf-test.cpp is testing performances of the LGM algorithm.
+     * The execution time will be evaluated inside measure<>::execution
+     * with a lambda input.
+     * */
 
+    typedef LGM::LgmClassifier<double,2>::Scorer Scorer;
     auto feature_s  = LGM::LgmClassifier<double,2>::Feature_s();
     auto classifier = LGM::LgmClassifier<double,2>();
 
@@ -46,27 +52,28 @@ int main(){
 
     cout << "Total: " << feature_s.size() << " of features." << endl;
 
-
     cout << "Append feature to rtree : ";
     cout << measure<>::execution([&](){
-
         // Append features
-        for(auto & feature: feature_s)
-            classifier.append_feature(feature);
+        //for(auto & feature: feature_s){
+        for(size_t i=0; i<feature_s.size(); i++){
+            if(i%10==0) classifier.append_feature(feature_s[i]);
+        }
 
     });
     cout << " msec"<< endl;
 
 
-    //cout << "Execute clustering algorithm : ";
-    //cout << measure<>::execution([&](){
-    //    // run cluster algorithm
-    //});
-    //cout << " msec"<< endl;
-    classifier.run_cluster(10.0);
-    auto scorer10 = classifier.create_scorer();
-    classifier.run_cluster(5.0);
-    auto scorer5 = classifier.create_scorer();
+    Scorer scorer1, scorer2;
+    cout << "Execute clustering algorithm : ";
+    cout << measure<>::execution([&](){
+        // run cluster algorithm
+        classifier.run_cluster(10.0);
+        scorer1 = classifier.create_scorer();
+        classifier.run_cluster(7.0);
+        scorer2 = classifier.create_scorer();
+    });
+    cout << " msec"<< endl;
 
     auto saveToFile = [&](LGM::LgmClassifier<double,2>::Scorer & scorer, string filename){
         vector<size_t> cluster_id_s;
@@ -106,11 +113,8 @@ int main(){
         cout << " msec"<< endl;
     };
 
-    //cout << scorer5.cluser_count() << endl;
-    //cout << scorer10.cluser_count() << endl;
-
-    saveToFile(scorer5, "predict5.csv");
-    saveToFile(scorer10, "predict10.csv");
+    saveToFile(scorer1, "predict1.csv");
+    saveToFile(scorer2, "predict2.csv");
 
     return 0;
 }
