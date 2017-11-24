@@ -23,7 +23,7 @@ Append feature to the cluster:
 classifier.append_feature({num1, num2});
 ```
 
-Append feature to the cluster:
+Execute the LGM classifier algorithm
 ```cpp
 classifier.run_cluster(7.0);
 ```
