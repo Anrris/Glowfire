@@ -31,12 +31,12 @@ int main(){
      * with a lambda input.
      * */
 
-    typedef LGM::LgmClassifier<double,2>::Scorer Scorer;
-    auto feature_s  = LGM::LgmClassifier<double,2>::Feature_s();
-    auto classifier = LGM::LgmClassifier<double,2>();
+    typedef LGM::LgmClassifier<float,2> Classifier;
+    auto feature_s  = Classifier::Feature_s();
+    auto classifier = Classifier();
 
     size_t Index;
-    double dummy, axis_0, axis_1;
+    Classifier::VarType dummy, axis_0, axis_1;
 
 
     cout << "Feature loading : ";
@@ -64,20 +64,33 @@ int main(){
     cout << " msec"<< endl;
 
 
-    Scorer scorer1, scorer2;
+    Classifier::Scorer scorer1, scorer2;
     cout << "Execute clustering algorithm : ";
     cout << measure<>::execution([&](){
         // run cluster algorithm
-        classifier.run_cluster(10.0);
+        cout << "Found: "<< classifier.run_cluster(10.0) << " clusters."<<endl;
+        cout << "Found: "<< classifier.run_cluster( 9.0) << " clusters."<<endl;
+        cout << "Found: "<< classifier.run_cluster( 8.0) << " clusters."<<endl;
+        cout << "Found: "<< classifier.run_cluster( 7.0) << " clusters."<<endl;
+        cout << "Found: "<< classifier.run_cluster( 6.0) << " clusters."<<endl;
+        cout << "Found: "<< classifier.run_cluster( 5.0) << " clusters."<<endl;
+        cout << "Found: "<< classifier.run_cluster( 4.0) << " clusters."<<endl;
         scorer1 = classifier.create_scorer();
-        classifier.run_cluster(7.0);
+    });
+    cout << " msec"<< endl;
+
+    cout << "Execute clustering algorithm : ";
+    cout << measure<>::execution([&](){
+        // run cluster algorithm
+        cout << "Found: "<< classifier.run_cluster(6.0) << " clusters.";
         scorer2 = classifier.create_scorer();
     });
     cout << " msec"<< endl;
 
-    auto saveToFile = [&](LGM::LgmClassifier<double,2>::Scorer & scorer, string filename){
+
+    auto saveToFile = [&](Classifier::Scorer & scorer, string filename){
         vector<size_t> cluster_id_s;
-        vector<vector<double>> result_s;
+        Classifier::Feature_s result_s;
         cout << "Predict score and classify : ";
         cout << measure<>::execution([&](){
 
@@ -86,7 +99,7 @@ int main(){
 
                 cluster_id_s.push_back(score_dict.begin()->second);
 
-                vector<double> predict = {score_dict.begin()->first};
+                Classifier::Feature predict = {score_dict.begin()->first};
                 for(auto & elem: feature){
                     predict.push_back(elem);
                 }
@@ -103,10 +116,10 @@ int main(){
 
             for(size_t i=0; i<cluster_id_s.size(); i++){
                 outfile << cluster_id_s[i] << " ";
-            auto & predict = result_s[i];
-            for(auto & elem: predict) outfile << elem << " ";
-            outfile << endl;
-        }
+                auto & predict = result_s[i];
+                for(auto & elem: predict) outfile << elem << " ";
+                outfile << endl;
+            }
 
         outfile.close();
         });

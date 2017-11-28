@@ -12,7 +12,6 @@
 #include <vector>                               /* STL Library*/
 #include <list>                                 /* STL Library*/
 #include <unordered_set>                        /* STL Library*/
-#include <functional>                           /* STL Library*/
 #include <memory>                               /* STL Library*/
 #include <limits>                               /* STL Library*/
 #include <exception>                            /* STL Library*/
@@ -195,7 +194,12 @@ namespace LGM{
             mRtree_ref          (_Rtree_ref),
             mRtreeFeature_s_ref (_RtreeFeature_s_ref),
             centroid_distance   (_centroid_distance)
-            { }
+            {
+                // Zerolize mCmat
+                for (int idx_r = 0; idx_r < mCmat.rows(); idx_r++)
+                for (int idx_c = 0; idx_c < mCmat.cols(); idx_c++)
+                    if(idx_r != idx_c) mCmat(idx_r, idx_c) = 0;
+            }
 
             auto distance_to(RtreeFeature & other) -> AxisType {
                 AxisType total_del_retval = 0;
@@ -262,6 +266,8 @@ namespace LGM{
                 );
 
                 LgmMatrix tmpCmat;
+                bool is_fresh_start = true;
+
                 auto reCalcCovMat = [&]() {
                     // Zerolize tmpCmat
                     for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
@@ -269,9 +275,17 @@ namespace LGM{
                             tmpCmat(idx_r, idx_c) = 0;
 
                     AxisType p_denumerator = 0;
+
+                    list<AxisType> weightList;
                     for (auto &it : result_s) {
                         auto & feature = mRtreeFeature_s_ref[it.second].getFeature();
-                        p_denumerator += scoreOfFeature(feature);
+                        if(is_fresh_start){
+                            weightList.push_back(1.0);
+                        }
+                        else{
+                            weightList.push_back(scoreOfFeature(feature));
+                        }
+                        p_denumerator += weightList.back();
                     }
                     for (auto &it : result_s) {
                         auto & feature = mRtreeFeature_s_ref[it.second].getFeature();
@@ -279,7 +293,8 @@ namespace LGM{
                         if (this->distance_to(rt_feature) > centroid_distance ) continue;
 
                         auto colMeanVec = feature_sub_mean_to_colVector(feature);
-                        auto weight = scoreOfFeature(feature)/p_denumerator;
+                        auto weight = weightList.front()/p_denumerator;
+                        weightList.pop_front();
 
                         for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
                         for (int idx_c = 0; idx_c < tmpCmat.rows(); idx_c++) {
@@ -291,9 +306,8 @@ namespace LGM{
 
                 };
 
-                AxisType max_diff = 0;
 
-                bool is_fresh_start = true;
+                AxisType max_diff = numeric_limits<AxisType>::max();
                 do{
                     reCalcCovMat();
 
@@ -301,17 +315,21 @@ namespace LGM{
 
                     if( is_fresh_start ){
                         mCmat = tmpCmat;
-                        is_fresh_start = false;
                     }
                     else{
                         mCmat = 0.5 * (mCmat + tmpCmat);
                     }
-                    mInvCmat = mCmat.inverse();
-                    mCmatDet = mCmat.determinant();
+                    mInvCmat = tmpCmat.inverse();
+                    mCmatDet = tmpCmat.determinant();
 
-                    AxisType max_diff = 0;
+                    if( is_fresh_start ){
+                        is_fresh_start = false;
+                        continue;
+                    }
+
+                    max_diff = 0;
                     for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
-                    for (int idx_c = 0; idx_c < tmpCmat.rows(); idx_c++) {
+                    for (int idx_c = 0; idx_c < tmpCmat.cols(); idx_c++) {
                         max_diff = max(max_diff, abs(diffCmat(idx_r, idx_c)) );
                     }
                 } while (max_diff > m_minimum_difference);
@@ -323,6 +341,7 @@ namespace LGM{
                 auto rowVec = feature_sub_mean_to_rowVector(feature);
                 auto colVec = feature_sub_mean_to_colVector(feature);
                 AxisType mahalanDistance = (rowVec * mInvCmat * colVec)(0, 0);
+                //AxisType result = (AxisType)exp( -0.5* mahalanDistance);
                 AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( 2 * _pi_ * mCmatDet );
                 return result;
             }

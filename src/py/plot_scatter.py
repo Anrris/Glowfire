@@ -8,7 +8,7 @@ import sys
 
 fig, ax = plt.subplots()
 
-colors = ['red', 'green', 'blue', 'brown', 'black', 'orange', 'purple', 'gray']
+colors = ['yellow', 'red', 'green', 'blue', 'brown', 'black', 'orange', 'purple', 'gray']
 infile = open(sys.argv[1], 'r')
 count = 0
 for line in infile.readlines():

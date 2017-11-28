@@ -17,6 +17,7 @@ namespace LGM
     class LgmClassifier: public LgmBase<AxisType>
     {
     public:
+        typedef AxisType                                        VarType;
         typedef typename LgmBase<AxisType>::Feature             Feature;
         typedef typename LgmBase<AxisType>::Feature_s           Feature_s;
 
@@ -108,29 +109,32 @@ namespace LGM
                 }
 
                 // Clean up centroid collision.
-                mCentroidListPtr->sort([](Centroid & L, Centroid & R){return L.count() > R.count();});
+                mCentroidListPtr->sort([](Centroid & L, Centroid & R){return L.count() < R.count();});
 
                 CentroidRtree   centroidRtreeRoot;
-
                 for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end(); c_iter++){
                     centroidRtreeRoot.insert({c_iter->getPoint(), c_iter});
                 }
-                for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end(); c_iter++){
+
+                for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end();){
                     vector<CentroidRtreeValue> result_s;
                     centroidRtreeRoot.query(
-                        bgi::intersects(
-                            c_iter->createBox(centroid_distance*2)
-                        ),
+                        bgi::intersects( c_iter->createBox(centroid_distance*2) ),
                         back_inserter(result_s)
                     );
 
+                    bool c_iter_advanced = false;
                     for(auto rs_iter: result_s){
                         auto cmp = rs_iter.second;
-                        if(c_iter->count() >= cmp->count() && c_iter != rs_iter.second){
-                            centroidRtreeRoot.remove({cmp->getPoint(), cmp});
-                            mCentroidListPtr->erase(cmp);
+                        if(c_iter->count() <= cmp->count() && c_iter != rs_iter.second){
+                            auto tmp_iter = c_iter;
+                            c_iter++;
+                            c_iter_advanced = true;
+                            centroidRtreeRoot.remove({tmp_iter->getPoint(), tmp_iter});
+                            mCentroidListPtr->erase(tmp_iter);
                         }
                     }
+                    if(!c_iter_advanced) c_iter++;
                 }
 
                 return needUpdate;
