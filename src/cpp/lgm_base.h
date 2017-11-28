@@ -260,6 +260,7 @@ namespace LGM{
             }
 
             auto updateCovariantMatrix() -> AxisType {
+                // TODO: using nearest neighbor distance for centroid mCmat update.
                 vector<RtreeValue> result_s;
                 mRtree_ref.query(
                         bgi::intersects(this->createBox(centroid_distance)), back_inserter(result_s)

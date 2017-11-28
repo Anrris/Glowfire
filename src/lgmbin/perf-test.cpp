@@ -69,12 +69,6 @@ int main(){
     cout << measure<>::execution([&](){
         // run cluster algorithm
         cout << "Found: "<< classifier.run_cluster(10.0) << " clusters."<<endl;
-        cout << "Found: "<< classifier.run_cluster( 9.0) << " clusters."<<endl;
-        cout << "Found: "<< classifier.run_cluster( 8.0) << " clusters."<<endl;
-        cout << "Found: "<< classifier.run_cluster( 7.0) << " clusters."<<endl;
-        cout << "Found: "<< classifier.run_cluster( 6.0) << " clusters."<<endl;
-        cout << "Found: "<< classifier.run_cluster( 5.0) << " clusters."<<endl;
-        cout << "Found: "<< classifier.run_cluster( 4.0) << " clusters."<<endl;
         scorer1 = classifier.create_scorer();
     });
     cout << " msec"<< endl;
