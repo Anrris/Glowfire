@@ -262,11 +262,18 @@ namespace LGM{
                 return ss.str();
             }
 
-            auto updateCovariantMatrix() -> AxisType {
+            auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef) -> AxisType {
                 // TODO: using nearest neighbor distance for centroid mCmat update.
+                vector<CentroidRtreeValue> nearest_result;
+                centroidRtreeRef.query(bgi::nearest((RtreePoint)*this, 2), std::back_inserter(nearest_result));
+
+                AxisType nearest_neighbor_distance = this->distance_to(
+                        *nearest_result.front().second
+                );
+
                 vector<RtreeValue> result_s;
                 mRtree_ref.query(
-                        bgi::intersects(this->createBox(centroid_distance)), back_inserter(result_s)
+                        bgi::intersects(this->createBox(nearest_neighbor_distance)), back_inserter(result_s)
                 );
 
                 LgmMatrix tmpCmat;

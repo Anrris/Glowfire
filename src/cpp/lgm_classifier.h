@@ -101,11 +101,12 @@ namespace LGM
             // ----------------------------------------------------
             // Second part: Optimize centroid
             // ----------------------------------------------------
+            CentroidRtree   centroidRtreeRoot;
             auto cleanUpCentroidCollision = [&](){
                 // Clean up centroid collision.
                 mCentroidListPtr->sort([](Centroid & L, Centroid & R){return L.count() < R.count();});
 
-                CentroidRtree   centroidRtreeRoot;
+                centroidRtreeRoot = CentroidRtree();
                 for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end(); c_iter++){
                     centroidRtreeRoot.insert({c_iter->getPoint(), c_iter});
                 }
@@ -157,7 +158,6 @@ namespace LGM
             do{
                 needUpdate = optimizeCentroidPtr();
                 cleanUpCentroidCollision();
-
             }
             while(needUpdate);
 
@@ -165,7 +165,7 @@ namespace LGM
             // Third part: Calculate covariance matrix
             // ----------------------------------------------------
             for(auto & centroid: *mCentroidListPtr){
-                centroid.updateCovariantMatrix();
+                centroid.updateCovariantMatrix(centroidRtreeRoot);
             }
 
             return mCentroidListPtr->size();
