@@ -82,9 +82,9 @@ if __name__ == "__main__":
     test.seed_in_range(mean=(12, 12),count=10000, diag=(3, 3), offdiag=(1, 2))
     test.seed_in_range(mean=(23, 15),count=15000, diag=(3, 3), offdiag=(1, 2))
     test.seed_in_range(mean=(25, 30),count=10000, diag=(3, 3), offdiag=(1, 2))
-    test.seed_in_range(mean=(22, 40),count=20000, diag=(6, 6), offdiag=(3, 2))
-    test.seed_in_range(mean=(10, 40),count=15000, diag=(6, 6), offdiag=(3, 2))
-    test.seed_in_range(mean=(44, 40),count=10000, diag=(4, 7), offdiag=(3, 2))
+    test.seed_in_range(mean=(22, 40),count=15000, diag=(6, 6), offdiag=(3, 2))
+    test.seed_in_range(mean=(-3, 40),count=15000, diag=(20,6), offdiag=(5, 2))
     test.seed_in_range(mean=(34, 10),count=25000, diag=(2, 8), offdiag=(3, 2))
+    test.seed_in_range(mean=(24, 53),count=15000, diag=(10,7), offdiag=(3, 2))
 
     test.save_data("rand")

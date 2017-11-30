@@ -8,17 +8,21 @@ import sys
 
 fig, ax = plt.subplots()
 
-colors = ['yellow', 'red', 'green', 'blue', 'brown', 'black', 'orange', 'purple', 'gray']
+colors = ['green', 'blue', 'brown', 'black', 'orange', 'purple', 'gray']
 infile = open(sys.argv[1], 'r')
 count = 0
 for line in infile.readlines():
-    if count % 100 == 0:
-        line_split = line.split()
+    line_split = line.split()
+    if line_split[0] == 'C':
+        x = float(line_split[1])
+        y = float(line_split[2])
+        print x, ' ',y
+        ax.scatter(x, y, c='red', s=80, alpha=1, edgecolors='none')
+    elif count % 40 == 0:
         cluster_id = int(line_split[0])
         x = float(line_split[2])
         y = float(line_split[3])
-
-        ax.scatter(x, y, c=colors[cluster_id % len(colors)], s=10, label=cluster_id, alpha=0.3, edgecolors='none')
+        ax.scatter(x, y, c=colors[cluster_id % len(colors)], s=10, label=cluster_id, alpha=0.5, edgecolors='none')
     count += 1
 infile.close()
 

@@ -101,13 +101,7 @@ namespace LGM
             // ----------------------------------------------------
             // Second part: Optimize centroid
             // ----------------------------------------------------
-            auto optimizeCentroidPtr = [&](){
-                bool needUpdate = true;
-                for(auto & centroid: *mCentroidListPtr){
-                    centroid.updateMean(minimum_diff);
-                    needUpdate = needUpdate && centroid.needUpdateMean();
-                }
-
+            auto cleanUpCentroidCollision = [&](){
                 // Clean up centroid collision.
                 mCentroidListPtr->sort([](Centroid & L, Centroid & R){return L.count() < R.count();});
 
@@ -117,6 +111,15 @@ namespace LGM
                 }
 
                 for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end();){
+                    // If centroid obtain too few data points.
+                    // Immediately delete.
+                    if(c_iter->count() < 2){
+                        auto tmp_iter = c_iter;
+                        c_iter++;
+                        centroidRtreeRoot.remove({tmp_iter->getPoint(), tmp_iter});
+                        mCentroidListPtr->erase(tmp_iter);
+                        continue;
+                    }
                     vector<CentroidRtreeValue> result_s;
                     centroidRtreeRoot.query(
                         bgi::intersects( c_iter->createBox(centroid_distance*2) ),
@@ -136,11 +139,27 @@ namespace LGM
                     }
                     if(!c_iter_advanced) c_iter++;
                 }
-
-                return needUpdate;
             };
 
-            while(optimizeCentroidPtr()){ }
+            auto optimizeCentroidPtr = [&](){
+                size_t count_needUpdate = 0;
+                for(auto & centroid: *mCentroidListPtr){
+                    if(centroid.needUpdateMean()){
+                        count_needUpdate++;
+                        centroid.updateMean(minimum_diff);
+                    }
+                }
+
+                return count_needUpdate > 0;
+            };
+
+            bool needUpdate;
+            do{
+                needUpdate = optimizeCentroidPtr();
+                cleanUpCentroidCollision();
+
+            }
+            while(needUpdate);
 
             // ----------------------------------------------------
             // Third part: Calculate covariance matrix

@@ -31,14 +31,21 @@ int main(){
      * with a lambda input.
      * */
 
+
+
     typedef LGM::LgmClassifier<float,2> Classifier;
     auto feature_s  = Classifier::Feature_s();
     auto classifier = Classifier();
+
+    Classifier::VarType cluster_distance;
+    cout << "Please enter the cluster distance:";
+    cin  >> cluster_distance;
 
     size_t Index;
     Classifier::VarType dummy, axis_0, axis_1;
 
 
+    //-------------------------------------------------
     cout << "Feature loading : ";
     cout << measure<>::execution([&](){
 
@@ -52,76 +59,71 @@ int main(){
 
     cout << "Total: " << feature_s.size() << " of features." << endl;
 
+    //-------------------------------------------------
     cout << "Append feature to rtree : ";
     cout << measure<>::execution([&](){
         // Append features
         //for(auto & feature: feature_s){
         for(size_t i=0; i<feature_s.size(); i++){
-            if(i%10==0) classifier.append_feature(feature_s[i]);
+            classifier.append_feature(feature_s[i]);
         }
 
     });
     cout << " msec"<< endl;
 
-
-    Classifier::Scorer scorer1, scorer2;
+    //-------------------------------------------------
+    Classifier::Scorer scorer;
     cout << "Execute clustering algorithm : ";
     cout << measure<>::execution([&](){
         // run cluster algorithm
-        cout << "Found: "<< classifier.run_cluster(10.0) << " clusters."<<endl;
-        scorer1 = classifier.create_scorer();
+        cout << "Found: "<< classifier.run_cluster(cluster_distance) << " clusters."<<endl;
+        scorer = classifier.create_scorer();
     });
     cout << " msec"<< endl;
 
-    cout << "Execute clustering algorithm : ";
+    //-------------------------------------------------
+    vector<size_t> cluster_id_s;
+    Classifier::Feature_s result_s;
+    cout << "Predict score and classify : ";
     cout << measure<>::execution([&](){
-        // run cluster algorithm
-        cout << "Found: "<< classifier.run_cluster(6.0) << " clusters.";
-        scorer2 = classifier.create_scorer();
+
+        for(auto & feature: feature_s){
+            auto score_dict = scorer.calc_score(feature);
+
+            cluster_id_s.push_back(score_dict.begin()->second);
+
+            Classifier::Feature predict = {score_dict.begin()->first};
+            for(auto & elem: feature){
+                predict.push_back(elem);
+            }
+            result_s.push_back(predict);
+        }
     });
     cout << " msec"<< endl;
 
+    //-------------------------------------------------
+    cout << "Save predictions to file : ";
+    cout << measure<>::execution([&](){
+        auto outfile = ofstream("predict.csv");
 
-    auto saveToFile = [&](Classifier::Scorer & scorer, string filename){
-        vector<size_t> cluster_id_s;
-        Classifier::Feature_s result_s;
-        cout << "Predict score and classify : ";
-        cout << measure<>::execution([&](){
+        for(size_t i=0; i<cluster_id_s.size(); i++){
+            outfile << cluster_id_s[i] << " ";
+            auto & predict = result_s[i];
+            for(auto & elem: predict) outfile << elem << " ";
+            outfile << endl;
+        }
 
-            for(auto & feature: feature_s){
-                auto score_dict = scorer.calc_score(feature);
-
-                cluster_id_s.push_back(score_dict.begin()->second);
-
-                Classifier::Feature predict = {score_dict.begin()->first};
-                for(auto & elem: feature){
-                    predict.push_back(elem);
-                }
-
-                result_s.push_back(predict);
+        for(auto & centroid: scorer.get_centroids()){
+            outfile << "C ";
+            for(auto & coord: centroid.getFeature()){
+                outfile << coord << " ";
             }
-
-        });
-        cout << " msec"<< endl;
-
-        cout << "Save to file : ";
-        cout << measure<>::execution([&](){
-            auto outfile = ofstream(filename);
-
-            for(size_t i=0; i<cluster_id_s.size(); i++){
-                outfile << cluster_id_s[i] << " ";
-                auto & predict = result_s[i];
-                for(auto & elem: predict) outfile << elem << " ";
-                outfile << endl;
-            }
+            outfile << centroid.count() << endl;
+        }
 
         outfile.close();
-        });
-        cout << " msec"<< endl;
-    };
-
-    saveToFile(scorer1, "predict1.csv");
-    saveToFile(scorer2, "predict2.csv");
+    });
+    cout << " msec"<< endl;
 
     return 0;
 }

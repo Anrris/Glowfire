@@ -209,10 +209,17 @@ namespace LGM{
                 }
                 return sqrt(total_del_retval);
             }
+            auto distance_to(Feature & feature) -> AxisType {
+                AxisType total_del_retval = 0;
+                for(size_t i=0; i<feature.size(); i++){
+                    AxisType del = this->at(i) - feature[i];
+                    total_del_retval += del * del;
+                }
+                return sqrt(total_del_retval);
+            }
 
             auto updateMean(AxisType _minimum_difference) -> AxisType {
                 m_minimum_difference = _minimum_difference;
-                if(!needUpdateMean()) return m_diff;
 
                 AxisType max_diff = 0;
 
@@ -234,11 +241,7 @@ namespace LGM{
                     }
                 }
 
-                // Findout the maximum difference.
-                for(size_t i=0; i<new_mean.size(); i++){
-                    max_diff = max(max_diff, abs(new_mean[i] - old_mean[i]));
-                }
-                m_diff = min(m_diff, max_diff);
+                m_diff = distance_to(new_mean);
 
                 this->setFeature(new_mean);
 
@@ -342,7 +345,6 @@ namespace LGM{
                 auto rowVec = feature_sub_mean_to_rowVector(feature);
                 auto colVec = feature_sub_mean_to_colVector(feature);
                 AxisType mahalanDistance = (rowVec * mInvCmat * colVec)(0, 0);
-                //AxisType result = (AxisType)exp( -0.5* mahalanDistance);
                 AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( 2 * _pi_ * mCmatDet );
                 return result;
             }
@@ -377,6 +379,9 @@ namespace LGM{
         typedef typename Centroid::CentroidRtreeValue   CentroidRtreeValue;
         typedef typename Centroid::CentroidRtree        CentroidRtree;
 
+        //===================================
+        //--- Implementation of Scorer ----
+        //-----------------------------------
         class Scorer{
             CentroidListPtr mCentroidListPtr;
         public:
@@ -401,8 +406,19 @@ namespace LGM{
                 return retval;
             }
 
+            auto get_centroids() -> vector<Centroid> {
+                vector<Centroid> retval;
+                for(const auto & iter: *mCentroidListPtr){
+                    retval.push_back(iter);
+                }
+                return retval;
+            }
+
             auto cluser_count() -> size_t { return mCentroidListPtr->size(); }
         };
+        //-----------------------------------
+        //--- Implementation of Scorer ----
+        //===================================
     };
 }
 
