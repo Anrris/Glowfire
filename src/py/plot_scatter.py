@@ -14,6 +14,7 @@ count = 0
 for line in infile.readlines():
     line_split = line.split()
     if line_split[0] == 'C':
+        print line_split
         x = float(line_split[1])
         y = float(line_split[2])
         print x, ' ',y

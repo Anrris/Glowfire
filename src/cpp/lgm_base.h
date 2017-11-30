@@ -6,6 +6,7 @@
 #ifndef LOCALGAUSSIANMODEL_LGM_BASE_H
 #define LOCALGAUSSIANMODEL_LGM_BASE_H
 
+#include <cmath>                               /* STL Library*/
 #include <string>                               /* STL Library*/
 #include <sstream>                              /* STL Library*/
 #include <iostream>                             /* STL Library*/
@@ -182,6 +183,7 @@ namespace LGM{
 
             size_t          m_occupation_count = 0;
 
+
             const AxisType  _pi_ = 3.141592653589793;
         public:
             Centroid(
@@ -263,7 +265,6 @@ namespace LGM{
             }
 
             auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef) -> AxisType {
-                // TODO: using nearest neighbor distance for centroid mCmat update.
                 vector<CentroidRtreeValue> nearest_result;
                 centroidRtreeRef.query(bgi::nearest((RtreePoint)*this, 2), std::back_inserter(nearest_result));
 
@@ -272,9 +273,16 @@ namespace LGM{
                 );
 
                 vector<RtreeValue> result_s;
+                Feature_s in_range_feature_s;
                 mRtree_ref.query(
                         bgi::intersects(this->createBox(nearest_neighbor_distance)), back_inserter(result_s)
                 );
+
+                for (auto &it : result_s) {
+                    Feature feature = mRtreeFeature_s_ref[it.second].getFeature();
+                    if (this->distance_to(feature) < nearest_neighbor_distance)
+                        in_range_feature_s.push_back(feature);
+                }
 
                 LgmMatrix tmpCmat;
                 bool is_fresh_start = true;
@@ -288,8 +296,7 @@ namespace LGM{
                     AxisType p_denumerator = 0;
 
                     list<AxisType> weightList;
-                    for (auto &it : result_s) {
-                        auto & feature = mRtreeFeature_s_ref[it.second].getFeature();
+                    for (auto & feature : in_range_feature_s) {
                         if(is_fresh_start){
                             weightList.push_back(1.0);
                         }
@@ -298,10 +305,7 @@ namespace LGM{
                         }
                         p_denumerator += weightList.back();
                     }
-                    for (auto &it : result_s) {
-                        auto & feature = mRtreeFeature_s_ref[it.second].getFeature();
-                        auto & rt_feature = mRtreeFeature_s_ref[it.second];
-                        if (this->distance_to(rt_feature) > centroid_distance ) continue;
+                    for (auto & feature : in_range_feature_s) {
 
                         auto colMeanVec = feature_sub_mean_to_colVector(feature);
                         auto weight = weightList.front()/p_denumerator;
@@ -319,8 +323,12 @@ namespace LGM{
 
 
                 AxisType max_diff = numeric_limits<AxisType>::max();
+                size_t count = 0;
                 do{
+                    count ++;
                     reCalcCovMat();
+                    mInvCmat = tmpCmat.inverse();
+                    mCmatDet = tmpCmat.determinant();
 
                     LgmMatrix diffCmat = mCmat - tmpCmat;
 
@@ -330,8 +338,6 @@ namespace LGM{
                     else{
                         mCmat = 0.5 * (mCmat + tmpCmat);
                     }
-                    mInvCmat = tmpCmat.inverse();
-                    mCmatDet = tmpCmat.determinant();
 
                     if( is_fresh_start ){
                         is_fresh_start = false;
@@ -396,8 +402,7 @@ namespace LGM{
             Scorer(CentroidListPtr centroidListPtr):
                 mCentroidListPtr(centroidListPtr)
             {}
-            auto calc_score(const Feature & feature) -> map<AxisType, size_t, std::greater<AxisType>>
-            {
+            auto calc_score(const Feature & feature) -> map<AxisType, size_t, std::greater<AxisType>> {
                 // This method will return a descending order map
                 // Where this map contain a [key: value] pair of [calculated-score: cluster-id]
                 // The cluster-id are all positive integers
@@ -406,9 +411,10 @@ namespace LGM{
 
                 size_t centroid_index = 0;
                 for(auto & iter: *mCentroidListPtr){
-                    auto score = iter.scoreOfFeature(feature);
-                    retval[score] = centroid_index;
                     centroid_index++;
+
+                    auto score = iter.scoreOfFeature(feature);
+                    retval[score] = centroid_index-1;
                 }
                 return retval;
             }
