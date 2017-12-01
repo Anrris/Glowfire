@@ -102,7 +102,7 @@ namespace LGM
             // Second part: Optimize centroid
             // ----------------------------------------------------
             CentroidRtree   centroidRtreeRoot;
-            auto cleanUpCentroidCollision = [&](){
+            auto cleanUpCentroidCollision = [&](bool needCleanTooFewCountCentroid){
                 // Clean up centroid collision.
                 mCentroidListPtr->sort([](Centroid & L, Centroid & R){return L.count() < R.count();});
 
@@ -114,23 +114,26 @@ namespace LGM
                 for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end();){
                     // If centroid obtain too few data points.
                     // Immediately delete.
-                    if(c_iter->count() < 2){
+                    if( needCleanTooFewCountCentroid &&
+                            c_iter->count() < pow(4.0,(double)Dimension)){
                         auto tmp_iter = c_iter;
                         c_iter++;
                         centroidRtreeRoot.remove({tmp_iter->getPoint(), tmp_iter});
                         mCentroidListPtr->erase(tmp_iter);
                         continue;
                     }
+
                     vector<CentroidRtreeValue> result_s;
                     centroidRtreeRoot.query(
-                        bgi::intersects( c_iter->createBox(centroid_distance*2) ),
+                        bgi::intersects( c_iter->createBox(centroid_distance) ),
                         back_inserter(result_s)
                     );
 
                     bool c_iter_advanced = false;
                     for(auto rs_iter: result_s){
                         auto cmp = rs_iter.second;
-                        if(c_iter->count() <= cmp->count() && c_iter != rs_iter.second){
+                        if(c_iter != rs_iter.second)
+                        if(c_iter->count() <= cmp->count() && c_iter->distance_to(*cmp) < centroid_distance){
                             auto tmp_iter = c_iter;
                             c_iter++;
                             c_iter_advanced = true;
@@ -154,12 +157,18 @@ namespace LGM
                 return count_needUpdate > 0;
             };
 
+
+
             bool needUpdate;
+            size_t iteration=0;
             do{
                 needUpdate = optimizeCentroidPtr();
-                cleanUpCentroidCollision();
+                cleanUpCentroidCollision( iteration > 3);
+                iteration++;
             }
             while(needUpdate);
+
+
 
             // ----------------------------------------------------
             // Third part: Calculate covariance matrix
@@ -179,6 +188,7 @@ namespace LGM
             auto scorer = Scorer(mCentroidListPtr);
             return scorer.calc_score(feature);
         }
+
         auto create_scorer() -> Scorer { return Scorer(mCentroidListPtr); }
     };
     //-----------------------------------
