@@ -12,9 +12,9 @@ using namespace std;
 
 int main(){
 
-    typedef LGM::LgmClassifier<float,2>::Scorer Scorer;
-    auto feature_s  = LGM::LgmClassifier<float,2>::Feature_s();
-    auto classifier = LGM::LgmClassifier<float,2>();
+    typedef LGM::LgmClassifier<float,2> Classifier;
+    auto feature_s  = Classifier::Feature_s();
+    auto classifier = Classifier();
 
     size_t Index;
     float dummy, axis_0, axis_1;
@@ -33,10 +33,10 @@ int main(){
 
     cout << "Run lgm cluster algorithm ..." << endl;
     classifier.run_cluster(8.0);
-    Scorer scorer = classifier.create_scorer();
+    Classifier::Scorer scorer = classifier.create_scorer();
 
     vector<size_t> cluster_id_s;
-    vector<vector<float>> result_s;
+    Classifier::Feature_s result_s;
 
     cout << "Predict scores from the scorer ..." << endl;
     for(auto & feature: feature_s){
@@ -44,7 +44,7 @@ int main(){
 
         cluster_id_s.push_back(score_dict.begin()->second);
 
-        vector<float> predict = {score_dict.begin()->first};
+        Classifier::Feature predict = {score_dict.begin()->first};
         for(auto & elem: feature){
             predict.push_back(elem);
         }
