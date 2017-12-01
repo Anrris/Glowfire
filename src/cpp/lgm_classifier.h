@@ -157,8 +157,6 @@ namespace LGM
                 return count_needUpdate > 0;
             };
 
-
-
             bool needUpdate;
             size_t iteration=0;
             do{
@@ -167,8 +165,6 @@ namespace LGM
                 iteration++;
             }
             while(needUpdate);
-
-
 
             // ----------------------------------------------------
             // Third part: Calculate covariance matrix

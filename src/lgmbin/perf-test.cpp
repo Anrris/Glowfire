@@ -63,7 +63,6 @@ int main(){
     cout << "Append feature to rtree : ";
     cout << measure<>::execution([&](){
         // Append features
-        //for(auto & feature: feature_s){
         for(size_t i=0; i<feature_s.size(); i++){
             classifier.append_feature(feature_s[i]);
         }
