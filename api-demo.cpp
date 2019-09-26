@@ -8,19 +8,18 @@
 #include <chrono>
 using namespace std;
 
-#include "lgm.h"
+#include "classifier.h"
 
 int main(){
 
-    typedef LGM::LgmClassifier<float,2> Classifier;
+    typedef glowfire::Classifier<float,2> Classifier;
     auto feature_s  = Classifier::Feature_s();
     auto classifier = Classifier();
 
     size_t Index;
     float dummy, axis_0, axis_1;
 
-
-    cout << "Load feature from file ..." << endl;
+    cout << "-- Load feature from file ..." << endl;
     auto infile = ifstream("rand.csv");
     while( infile >> Index >> dummy >> axis_0 >> axis_1 )
         feature_s.push_back({axis_0, axis_1});

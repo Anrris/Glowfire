@@ -6,35 +6,35 @@
 #ifndef LOCAL_GAUSSIAN_MODEL_H
 #define LOCAL_GAUSSIAN_MODEL_H
 
-#include "lgm_base.h"
+#include "classifier_base.h"
 
-namespace LGM
+namespace glowfire 
 {
     //===================================
-    //--- Implementation of LgmClassifier
+    //--- Implementation of Classifier
     //-----------------------------------
     template<typename AxisType, size_t Dimension>
-    class LgmClassifier: public LgmBase<AxisType>
+    class Classifier: public GlowfireBase<AxisType>
     {
     public:
         typedef AxisType                                        VarType;
-        typedef typename LgmBase<AxisType>::Feature             Feature;
-        typedef typename LgmBase<AxisType>::Feature_s           Feature_s;
+        typedef typename GlowfireBase<AxisType>::Feature             Feature;
+        typedef typename GlowfireBase<AxisType>::Feature_s           Feature_s;
 
-        typedef LgmType<AxisType,Dimension>                     LgmTypeCollect;
-        typedef typename LgmTypeCollect::CentroidRtreeValue     CentroidRtreeValue;
+        typedef GlowfireType<AxisType,Dimension>                     GlowfireTypeCollect;
+        typedef typename GlowfireTypeCollect::CentroidRtreeValue     CentroidRtreeValue;
 
-        typedef typename LgmTypeCollect::Rtree                  Rtree;
-        typedef typename LgmTypeCollect::RtreeFeature           RtreeFeature;
-        typedef typename LgmTypeCollect::RtreeFeature_s         RtreeFeature_s;
+        typedef typename GlowfireTypeCollect::Rtree                  Rtree;
+        typedef typename GlowfireTypeCollect::RtreeFeature           RtreeFeature;
+        typedef typename GlowfireTypeCollect::RtreeFeature_s         RtreeFeature_s;
 
-        typedef typename LgmTypeCollect::Centroid               Centroid;
-        typedef typename LgmTypeCollect::CentroidList           CentroidList;
-        typedef typename LgmTypeCollect::CentroidListPtr        CentroidListPtr;
-        typedef typename LgmTypeCollect::CentroidListIterator   CentroidListIterator;
-        typedef typename LgmTypeCollect::CentroidRtree          CentroidRtree;
+        typedef typename GlowfireTypeCollect::Centroid               Centroid;
+        typedef typename GlowfireTypeCollect::CentroidList           CentroidList;
+        typedef typename GlowfireTypeCollect::CentroidListPtr        CentroidListPtr;
+        typedef typename GlowfireTypeCollect::CentroidListIterator   CentroidListIterator;
+        typedef typename GlowfireTypeCollect::CentroidRtree          CentroidRtree;
 
-        typedef typename LgmTypeCollect::Scorer                 Scorer;
+        typedef typename GlowfireTypeCollect::Scorer                 Scorer;
 
         typedef unordered_set<string>                           CentroidStringSet;
 
@@ -44,7 +44,7 @@ namespace LGM
         CentroidListPtr     mCentroidListPtr;
 
     public:
-        LgmClassifier():
+        Classifier():
             mRtreeRoot(),
             mRtreeFeature_s()
         { }
@@ -188,7 +188,7 @@ namespace LGM
         auto create_scorer() -> Scorer { return Scorer(mCentroidListPtr); }
     };
     //-----------------------------------
-    //--- Implementation of LgmClassifier
+    //--- Implementation of Classifier
     //===================================
 };
 

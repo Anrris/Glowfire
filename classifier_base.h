@@ -3,8 +3,8 @@
 // All rights reserved.
 //
 
-#ifndef LOCALGAUSSIANMODEL_LGM_BASE_H
-#define LOCALGAUSSIANMODEL_LGM_BASE_H
+#ifndef CLASSIFIER_BASE_H
+#define CLASSIFIER_BASE_H
 
 #include <cmath>                               /* STL Library*/
 #include <string>                               /* STL Library*/
@@ -24,7 +24,7 @@
 
 #include <Eigen/Dense>                          /* Eigen Library: For matrix operation*/
 
-namespace LGM{
+namespace glowfire{
 
     using namespace std;
     namespace bg  = boost::geometry;
@@ -32,10 +32,10 @@ namespace LGM{
     namespace bgi = boost::geometry::index;
 
     template<typename AxisType>
-    class LgmBase
+    class GlowfireBase
     {
     public:
-        typedef shared_ptr<LgmBase<AxisType>>   Ptr;
+        typedef shared_ptr<GlowfireBase<AxisType>>   Ptr;
         typedef vector<AxisType>                Feature;
         typedef vector<Feature>                 Feature_s;
 
@@ -63,11 +63,11 @@ namespace LGM{
      * CentroidRtree        : The Rtree of a Centroid.
      * */
     template<typename AxisType, size_t Dimension>
-    class LgmType
+    class GlowfireType
     {
     public:
-        typedef typename LgmBase<AxisType>::Feature                 Feature;
-        typedef typename LgmBase<AxisType>::Feature_s               Feature_s;
+        typedef typename GlowfireBase<AxisType>::Feature                 Feature;
+        typedef typename GlowfireBase<AxisType>::Feature_s               Feature_s;
 
         typedef bgm::point<AxisType, Dimension, bg::cs::cartesian>  RtreePoint;
         typedef bgm::box<RtreePoint>                                RtreeBox;
@@ -435,4 +435,4 @@ namespace LGM{
     };
 }
 
-#endif //LOCALGAUSSIANMODEL_LGM_BASE_H
+#endif //CLASSIFIER_BASE_H
