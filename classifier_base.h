@@ -40,7 +40,7 @@ namespace glowfire{
         typedef vector<Feature>                 Feature_s;
 
         virtual void append_feature(Feature) = 0;
-        virtual auto run_cluster(AxisType _centroid_distance, AxisType ratio_of_minimum_diff = 0.01) -> size_t = 0;
+        virtual auto run_cluster(AxisType _centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> size_t = 0;
         virtual auto calc_score(const Feature & feature) -> map<AxisType, size_t, std::greater<AxisType>> = 0;
     };
 

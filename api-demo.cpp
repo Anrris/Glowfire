@@ -31,7 +31,7 @@ int main(){
     }
 
     cout << "Run lgm cluster algorithm ..." << endl;
-    classifier.run_cluster(8.0);
+    classifier.run_cluster(8.0, 10);
     Classifier::Scorer scorer = classifier.create_scorer();
 
     vector<size_t> cluster_id_s;

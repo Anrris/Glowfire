@@ -54,7 +54,7 @@ namespace glowfire
             mRtreeRoot.insert({mRtreeFeature_s.back(), mRtreeRoot.size()});
         }
 
-        auto run_cluster(AxisType centroid_distance, AxisType ratio_of_minimum_diff = 0.01) -> size_t {
+        auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> size_t {
             mCentroidListPtr = make_shared<CentroidList>();
 
             const auto minimum_diff = centroid_distance * ratio_of_minimum_diff;
@@ -64,6 +64,7 @@ namespace glowfire
             // --------------------------------------------------------
             CentroidStringSet    centroidStringSet;
             auto createCentroidFromRtreeFeature = [&](RtreeFeature & rt_feature){
+                // TODO: Use hash id to replace the string as look up key.
                 auto centroidKey = string();
                 Feature centroidFeature;
 
@@ -114,8 +115,7 @@ namespace glowfire
                 for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end();){
                     // If centroid obtain too few data points.
                     // Immediately delete.
-                    if( needCleanTooFewCountCentroid &&
-                            c_iter->count() < pow(4.0,(double)Dimension)){
+                    if( needCleanTooFewCountCentroid && c_iter->count() <= minimal_count){
                         auto tmp_iter = c_iter;
                         c_iter++;
                         centroidRtreeRoot.remove({tmp_iter->getPoint(), tmp_iter});
@@ -161,7 +161,7 @@ namespace glowfire
             size_t iteration=0;
             do{
                 needUpdate = optimizeCentroidPtr();
-                cleanUpCentroidCollision( iteration > 3);
+                cleanUpCentroidCollision( iteration > 2);
                 iteration++;
             }
             while(needUpdate);
