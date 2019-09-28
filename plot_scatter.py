@@ -20,7 +20,7 @@ for line in infile.readlines():
         print(x, ' ',y)
         ax.scatter(x, y, c='red', s=80, alpha=1, edgecolors='none')
     elif count % 40 == 0:
-        cluster_id = int(line_split[0])
+        cluster_id = hash(line_split[0]) % 10000
         x = float(line_split[2])
         y = float(line_split[3])
         ax.scatter(x, y, c=colors[cluster_id % len(colors)], s=10, label=cluster_id, alpha=0.5, edgecolors='none')

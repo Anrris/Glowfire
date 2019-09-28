@@ -4,15 +4,11 @@
 #
 
 cmake_minimum_required(VERSION 3.8)
-project(Glowfire)
+project(Glassfire)
 
 set (CMAKE_CXX_STANDARD 11)
 
-set(api_demo api-demo.cpp)
-
-set(SOURCE_FILES
-        classifier_base.h
-        classifier.h)
+set(test_classifier test_classifier.cpp)
 
 find_package(Boost 1.71.0)
 
@@ -22,5 +18,5 @@ set(INCLUDE_DIR
         )
 include_directories(${INCLUDE_DIR})
 
-add_executable(api-demo ${api_demo} ${SOURCE_FILES})
+add_executable(test_classifier ${test_classifier})
 

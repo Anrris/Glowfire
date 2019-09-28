@@ -8,11 +8,11 @@
 #include <chrono>
 using namespace std;
 
-#include "classifier.h"
+#include "glassfire.h"
 
 int main(){
 
-    typedef glowfire::Classifier<float,2> Classifier;
+    typedef glassfire::Classifier<float,2, size_t> Classifier;
     auto feature_s  = Classifier::Feature_s();
     auto classifier = Classifier();
 
@@ -27,19 +27,18 @@ int main(){
 
     cout << "Append features ..." << endl;
     for(size_t i=0; i<feature_s.size(); i++){
-        classifier.append_feature(feature_s[i]);
+        classifier.append_feature(feature_s[i], i);
     }
 
     cout << "Run lgm cluster algorithm ..." << endl;
-    classifier.run_cluster(8.0, 10);
-    Classifier::Scorer scorer = classifier.create_scorer();
+    auto scorer = classifier.run_cluster(8.0);
 
-    vector<size_t> cluster_id_s;
+    vector<string> cluster_id_s;
     Classifier::Feature_s result_s;
 
     cout << "Predict scores from the scorer ..." << endl;
     for(auto & feature: feature_s){
-        auto score_dict = scorer.calc_score(feature);
+        auto score_dict = scorer.calc_scores(feature);
 
         cluster_id_s.push_back(score_dict.begin()->second);
 
