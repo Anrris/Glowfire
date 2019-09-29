@@ -36,7 +36,7 @@ public:
     typedef typename GlassfireType::CentroidRtree           CentroidRtree;
     typedef typename GlassfireType::CentroidRtreePtr        CentroidRtreePtr;
 
-    typedef typename GlassfireType::Scorer                  Scorer;
+    typedef typename GlassfireType::ScorerSet                  ScorerSet;
 
     typedef unordered_set<size_t>                           CentroidHashSet;
     typedef typename GlassfireType::ClusterModel          ClusterModel;
@@ -59,7 +59,7 @@ public:
         mRtreeRoot.insert({mRtreeFeature_s.back(), featureInfo});
     }
 
-    auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> Scorer {
+    auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> ScorerSet {
         mCentroidListPtr = make_shared<CentroidList>();
 
         const auto minimum_diff = centroid_distance * ratio_of_minimum_diff;
@@ -178,8 +178,13 @@ public:
         // ----------------------------------------------------
         // Third part: Calculate covariance matrix
         // ----------------------------------------------------
+
         for(auto & centroid: *mCentroidListPtr){
-            centroid.updateCovariantMatrix(centroidRtreeRoot);
+            centroid.count_in_range_feature_s(centroidRtreeRoot);
+        }
+        
+        for(auto & centroid: *mCentroidListPtr){
+            centroid.updateCovariantMatrix(centroidRtreeRoot, mCentroidListPtr);
         }
 
         // Build the Centroid Rtree(Ptr) from the Centroid List(Ptr) 
@@ -189,7 +194,7 @@ public:
         }
 
         //return mCentroidListPtr->size();
-        return Scorer(mCentroidListPtr, mCentroidRtreePtr);
+        return ScorerSet(mCentroidListPtr, mCentroidRtreePtr);
     }
 };
 //-----------------------------------

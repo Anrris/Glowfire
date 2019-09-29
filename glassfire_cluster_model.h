@@ -32,7 +32,7 @@ public:
         auto rowVec = feature_sub_mean_to_rowVector(feature);
         auto colVec = feature_sub_mean_to_colVector(feature);
         AxisType mahalanDistance = (rowVec * mInvCmat * colVec)(0, 0);
-        AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( 2 * _pi_ * mCmatDet );
+        AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( pow(2 * _pi_, Dimension) * mCmatDet );
         return result;
     }
     auto mean() -> const Feature & {return mMean;}

@@ -151,14 +151,14 @@ public:
     class Centroid;
 
     typedef typename Centroid::CentroidList         CentroidList;
-    typedef shared_ptr<CentroidList>                CentroidListPtr;
+    typedef typename Centroid::CentroidListPtr      CentroidListPtr;
     typedef typename Centroid::CentroidListIterator CentroidListIterator;
 
     typedef typename Centroid::CentroidRtreeValue   CentroidRtreeValue;
     typedef typename Centroid::CentroidRtree        CentroidRtree;
     typedef shared_ptr<CentroidRtree>               CentroidRtreePtr;
 
-    class Scorer; //See implementation in "scorer.h"
+    class ScorerSet; 
 };
 
 }

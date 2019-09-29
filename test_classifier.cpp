@@ -6,11 +6,13 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <cmath>
 using namespace std;
 
 #include "glassfire.h"
 
 int main(){
+
 
     typedef glassfire::Classifier<float,2, size_t> Classifier;
     auto feature_s  = Classifier::Feature_s();
@@ -31,34 +33,50 @@ int main(){
     }
 
     cout << "Run lgm cluster algorithm ..." << endl;
-    auto scorer = classifier.run_cluster(8.0);
+    auto scorerSet = classifier.run_cluster(8.0);
+
+    vector<string> cluster_id_s;
+    Classifier::Feature_s result_s;
+
+    cout << "Predict scores from the scorer ..." << endl;
+    for(auto & feature: feature_s){
+        auto score_dict = scorerSet.calc_scores(feature);
+
+        cluster_id_s.push_back(score_dict.begin()->second);
+
+        Classifier::Feature predict = {score_dict.begin()->first};
+        for(auto & elem: feature){
+            predict.push_back(elem);
+        }
+
+        result_s.push_back(predict);
+    }
+
+    cout << "Save result to a file ..." << endl;
+    auto outfile = ofstream("api-demo_predict.csv");
+    for(size_t i=0; i<cluster_id_s.size(); i++){
+        outfile << cluster_id_s[i] << " ";
+        auto & predict = result_s[i];
+        for(auto & elem: predict) outfile << elem << " ";
+        outfile << endl;
+    }
+    outfile.close();
 
     cout << "Print Centroid id/positions ..." << endl;
-    auto centroids = scorer.get_centroids();
+    outfile = ofstream("api-demo_centroid.csv");
+    auto centroids = scorerSet.get_centroids();
     for(auto iter: centroids){
         auto feature = iter.getFeature();
         cout << iter.getKeyStr() << " " << feature[0] << " " << feature[1] << endl;
+        outfile << iter.getKeyStr() << " " << feature[0] << " " << feature[1] << endl;
     }
+    outfile.close();
 
-    auto result = scorer.query_centroids({23.8, 52.7}, 20);
-    cout << endl;
-    cout << result.second.mModelKey << endl;
-    cout << endl;
-
+    auto result = scorerSet.query_centroids({23.8, 52.7}, 20);
     auto model = result.second;
     model = result.second;
     cout << model.mModelKey << endl;
-    cout << model.eval({23, 52.7}) << endl;
-    cout << model.eval({23, 55.7}) << endl;
-    cout << model.mCmatDet << endl;
-
-    result = scorer.query_centroids({20, 50}, 20);
-    cout << endl;
-    cout << result.second.mModelKey << endl;
-    cout << result.first;
-    cout << endl;
-
-
+    cout << model.eval({24.0265, 52.9805}) << endl;
 
     return 0;
 }

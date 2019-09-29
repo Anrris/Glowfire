@@ -6,15 +6,15 @@
 
 namespace glassfire{
     //===================================
-    //--- Implementation of Scorer --
+    //--- Implementation of ScorerSet --
     //-----------------------------------
     template<typename AxisType, size_t Dimension, typename FeatureInfo>
-    class GlassfireType<AxisType, Dimension, FeatureInfo>::Scorer{ 
+    class GlassfireType<AxisType, Dimension, FeatureInfo>::ScorerSet{ 
             CentroidListPtr mCentroidListPtr;
             CentroidRtreePtr mCentroidRtreePtr;
         public:
-        Scorer(){}
-        Scorer(CentroidListPtr centroidListPtr, CentroidRtreePtr centroidRtreePtr):
+        ScorerSet(){}
+        ScorerSet(CentroidListPtr centroidListPtr, CentroidRtreePtr centroidRtreePtr):
             mCentroidListPtr(centroidListPtr),
             mCentroidRtreePtr(centroidRtreePtr)
         {}
@@ -65,7 +65,7 @@ namespace glassfire{
         auto cluser_count() -> size_t { return mCentroidListPtr->size(); }
     };
     //-----------------------------------
-    //--- Implementation of Scorer --
+    //--- Implementation of ScorerSet --
     //===================================
 }
 

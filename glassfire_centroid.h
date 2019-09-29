@@ -14,6 +14,7 @@ class GlassfireType<AxisType, Dimension, FeatureInfo>::Centroid: public RtreeFea
 {
 public:
     typedef list<Centroid>                                  CentroidList;
+    typedef shared_ptr<CentroidList>                        CentroidListPtr;
     typedef typename CentroidList::iterator                 CentroidListIterator;
     typedef pair<RtreePoint, CentroidListIterator>          CentroidRtreeValue;
     typedef bgi::rtree<CentroidRtreeValue, bgi::linear<16>> CentroidRtree;
@@ -24,14 +25,18 @@ private:
     AxisType            centroid_distance;
     string              mCentroidKeyStr;
 
-    AxisType            m_diff = numeric_limits<AxisType>::max();
-    AxisType            m_minimum_difference;
+    AxisType            N_soft_k;
+    AxisType            N_k;
 
     Matrix              mCmat;
     Matrix              mInvCmat;
     AxisType            mCmatDet;
+    AxisType            m_diff = numeric_limits<AxisType>::max();
+    AxisType            m_minimum_difference;
 
     size_t              m_occupation_count = 0;
+
+    Feature_s           m_in_range_feature_s;
 
     const AxisType  _pi_ = 3.141592653589793;
 public:
@@ -112,7 +117,15 @@ public:
         return ss.str();
     }
 
-    auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef) -> AxisType {
+    auto scoreOfFeature(const Feature &feature) -> AxisType {
+        auto rowVec = feature_sub_mean_to_rowVector(feature);
+        auto colVec = feature_sub_mean_to_colVector(feature);
+        AxisType mahalanDistance = (rowVec * mInvCmat * colVec)(0, 0);
+        AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( pow(2 * _pi_, Dimension) * mCmatDet);
+        return result;
+    }
+
+    auto count_in_range_feature_s(CentroidRtree & centroidRtreeRef) -> void {
         vector<CentroidRtreeValue> nearest_result;
         centroidRtreeRef.query(bgi::nearest((RtreePoint)*this, 2), std::back_inserter(nearest_result));
 
@@ -121,7 +134,6 @@ public:
         );
 
         vector<RtreeValue> result_s;
-        Feature_s in_range_feature_s;
         mRtree_ref.query(
                 bgi::intersects(this->createBox(nearest_neighbor_distance)), back_inserter(result_s)
         );
@@ -129,22 +141,30 @@ public:
         for (auto &it : result_s) {
             Feature feature = mRtreeFeature_s_ref[it.second].getFeature();
             if (this->distance_to(feature) < nearest_neighbor_distance)
-                in_range_feature_s.push_back(feature);
+                m_in_range_feature_s.push_back(feature);
         }
+    }
 
-        Matrix tmpCmat;
+    auto get_in_range_feature_s() -> const Feature_s &{ return m_in_range_feature_s; }
+
+    auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef, CentroidListPtr centroidListPtr) -> AxisType {
+
+        size_t iteration_count = 0;
+        Matrix tmpCmat, diffCmat;
         bool is_fresh_start = true;
 
-        auto reCalcCovMat = [&]() {
+        auto iterate_parameters = [&]() {
+
+            iteration_count ++;
             // Zerolize tmpCmat
             for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
             for (int idx_c = 0; idx_c < tmpCmat.cols(); idx_c++)
-                    tmpCmat(idx_r, idx_c) = 0;
+                tmpCmat(idx_r, idx_c) = 0;
 
             AxisType p_denumerator = 0;
 
             list<AxisType> weightList;
-            for (auto & feature : in_range_feature_s) {
+            for (auto & feature : m_in_range_feature_s) {
                 if(is_fresh_start){
                     weightList.push_back(1.0);
                 }
@@ -153,7 +173,7 @@ public:
                 }
                 p_denumerator += weightList.back();
             }
-            for (auto & feature : in_range_feature_s) {
+            for (auto & feature : m_in_range_feature_s) {
 
                 auto colMeanVec = feature_sub_mean_to_colVector(feature);
                 auto weight = weightList.front()/p_denumerator;
@@ -161,35 +181,39 @@ public:
 
                 for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
                 for (int idx_c = 0; idx_c < tmpCmat.rows(); idx_c++) {
-                    tmpCmat(idx_r, idx_c) += weight
-                        * colMeanVec(idx_r, 0)
-                        * colMeanVec(idx_c, 0);
+                    if(is_fresh_start){
+                        tmpCmat(idx_r, idx_c) += colMeanVec(idx_r, 0) * colMeanVec(idx_c, 0)/m_in_range_feature_s.size();
+                    }
+                    else{
+                        tmpCmat(idx_r, idx_c) += weight * colMeanVec(idx_r, 0) * colMeanVec(idx_c, 0);
+                    }
                 }
             }
+            //cout << tmpCmat << endl;
+            //cout << "..." << endl;
 
+            diffCmat = mCmat - tmpCmat;
+
+            mCmat = tmpCmat;
+            mInvCmat = mCmat.inverse();
+            mCmatDet = mCmat.determinant();
         };
 
+        //cout << "------  " ;
+        //auto center = this->getFeature();
+        //for(auto val: center){
+        //    cout << val << " : ";
+        //}
+        //cout << endl;
 
         AxisType max_diff = numeric_limits<AxisType>::max();
-        size_t count = 0;
-        do{
-            count ++;
-            reCalcCovMat();
-            mInvCmat = tmpCmat.inverse();
-            mCmatDet = tmpCmat.determinant();
 
-            Matrix diffCmat = mCmat - tmpCmat;
-
-            if( is_fresh_start ){
-                mCmat = tmpCmat;
-            }
-            else{
-                mCmat = 0.5 * (mCmat + tmpCmat);
-            }
+        auto self_consistnt = [&](){
+            iterate_parameters();
 
             if( is_fresh_start ){
                 is_fresh_start = false;
-                continue;
+                return;
             }
 
             max_diff = 0;
@@ -197,20 +221,17 @@ public:
             for (int idx_c = 0; idx_c < tmpCmat.cols(); idx_c++) {
                 max_diff = max(max_diff, abs(diffCmat(idx_r, idx_c)) );
             }
-        } while (max_diff > m_minimum_difference);
-        mInvCmat = mCmat.inverse();
-        mCmatDet = mCmat.determinant();
+        };
+
+        // Perform single shot calculation
+        for(int i=0; i<1; i++){
+            self_consistnt();
+        }
 
         return max_diff;
     }
 
-    auto scoreOfFeature(const Feature &feature) -> AxisType {
-        auto rowVec = feature_sub_mean_to_rowVector(feature);
-        auto colVec = feature_sub_mean_to_colVector(feature);
-        AxisType mahalanDistance = (rowVec * mInvCmat * colVec)(0, 0);
-        AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( 2 * _pi_ * mCmatDet );
-        return result;
-    }
+
 
     auto get_model() -> ClusterModel {
         return ClusterModel(this->getFeature(), getCovariantMatrix(), mCentroidKeyStr);

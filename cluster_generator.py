@@ -86,6 +86,7 @@ if __name__ == "__main__":
     test.seed_in_range(mean=(-3, 40),count=15000, diag=(20,6), offdiag=(5, 2))
     test.seed_in_range(mean=(34, 10),count=25000, diag=(2, 8), offdiag=(3, 2))
     test.seed_in_range(mean=(24, 53),count=15000, diag=(10,7), offdiag=(3, 2))
+    test.seed_in_range(mean=(54,-83),count=15000, diag=(30,20), offdiag=(3, 2))
 
 
 
