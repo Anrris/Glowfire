@@ -6,7 +6,7 @@
 namespace glassfire{
 
 template<typename T>
-string fmt_string(T input, bool with_plus=false, size_t precision=10){
+std::string fmt_string(T input, bool with_plus=false, size_t precision=10){
     std::ostringstream streamObj;
     streamObj << std::fixed;
     streamObj << std::setprecision(precision);

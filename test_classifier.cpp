@@ -10,7 +10,6 @@
 using namespace std;
 
 #include "glassfire.h"
-#include "glassfire_util.h"
 
 int main(){
 

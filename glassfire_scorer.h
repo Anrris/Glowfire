@@ -3,13 +3,25 @@
 #define SCORER_H
 
 #include "glassfire_base.h"
+#include "glassfire_cluster_model.h"
 
 namespace glassfire{
+
+    template<typename AxisType, typename FeatureInfo>
+    class ScorerSetBase{
+    public:
+        typedef std::vector<AxisType> Feature;
+
+        ~ScorerSetBase(){}
+        virtual auto calc_scores(const Feature & feature) -> std::map<AxisType, std::string, std::greater<AxisType>>  =0;
+        virtual auto query_centroids(const Feature & feature, AxisType box_distance) -> std::pair<AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>> = 0;
+
+    };
     //===================================
     //--- Implementation of ScorerSet --
     //-----------------------------------
     template<typename AxisType, size_t Dimension, typename FeatureInfo>
-    class GlassfireType<AxisType, Dimension, FeatureInfo>::ScorerSet{ 
+    class GlassfireType<AxisType, Dimension, FeatureInfo>::ScorerSet: public ScorerSetBase<AxisType, FeatureInfo>{ 
             CentroidListPtr mCentroidListPtr;
             CentroidRtreePtr mCentroidRtreePtr;
         public:
@@ -19,12 +31,12 @@ namespace glassfire{
             mCentroidRtreePtr(centroidRtreePtr)
         {}
 
-        auto calc_scores(const Feature & feature) -> map<AxisType, string, std::greater<AxisType>> {
+        auto calc_scores(const Feature & feature) -> std::map<AxisType, std::string, std::greater<AxisType>> {
             // This method will return a descending order map
             // Where this map contain a [key: value] pair of [calculated-score: cluster-id]
             // The cluster-id are all positive integers
 
-            auto retval = map<AxisType, string, std::greater<AxisType>>();
+            auto retval = std::map<AxisType, std::string, std::greater<AxisType>>();
 
             size_t centroid_index = 0;
             for(auto & iter: *mCentroidListPtr){
@@ -36,24 +48,24 @@ namespace glassfire{
             return retval;
         }
 
-        auto get_centroids() -> vector<Centroid> {
-            vector<Centroid> retval;
+        auto get_centroids() -> std::vector<Centroid> {
+            std::vector<Centroid> retval;
             for(const auto & iter: *mCentroidListPtr){
                 retval.push_back(iter);
             }
             return retval;
         }
 
-        auto query_centroids(const Feature & feature, AxisType box_distance) -> pair<AxisType, ClusterModel> {
+        auto query_centroids(const Feature & feature, AxisType box_distance) -> std::pair<AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>> {
 
             auto rtreeFeature = RtreeFeature(feature);
 
-            vector<CentroidRtreeValue> result_s;
+            std::vector<CentroidRtreeValue> result_s;
             mCentroidRtreePtr->query(
                     bgi::intersects(rtreeFeature.createBox(box_distance)), back_inserter(result_s)
             );
 
-            auto centroidMap = map<AxisType, ClusterModel, std::greater<AxisType>>();
+            auto centroidMap = std::map<AxisType, ClusterModel, std::greater<AxisType>>();
             for(auto & crv_iter: result_s){
                 auto score = crv_iter.second->scoreOfFeature(feature);
                 centroidMap.insert({ score, crv_iter.second->get_model() });

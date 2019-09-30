@@ -27,6 +27,7 @@ public:
     typedef typename GlassfireType::CentroidRtreeValue      CentroidRtreeValue;
 
     typedef typename GlassfireType::Rtree                   Rtree;
+    typedef typename GlassfireType::RtreePoint   RtreePoint;
     typedef typename GlassfireType::RtreeFeature            RtreeFeature;
     typedef typename GlassfireType::RtreeFeature_s          RtreeFeature_s;
 
@@ -37,10 +38,10 @@ public:
     typedef typename GlassfireType::CentroidRtree           CentroidRtree;
     typedef typename GlassfireType::CentroidRtreePtr        CentroidRtreePtr;
 
-    typedef typename GlassfireType::ScorerSet                  ScorerSet;
+    typedef typename GlassfireType::ScorerSet               ScorerSet;
 
-    typedef unordered_set<size_t>                           CentroidHashSet;
-    typedef typename GlassfireType::ClusterModel          ClusterModel;
+    typedef std::unordered_set<size_t>                      CentroidHashSet;
+    typedef typename GlassfireType::ClusterModel            ClusterModel;
 
 private:
     Rtree               mRtreeRoot;
@@ -55,13 +56,18 @@ public:
         mRtreeFeature_s()
     { }
 
+    void append_feature(Feature feature, const RtreePoint &p, FeatureInfo featureInfo){
+        //mRtreeFeature_s.push_back(RtreeFeature(feature, p));
+        mRtreeRoot.insert({p, featureInfo});
+    }
+
     void append_feature(Feature feature, FeatureInfo featureInfo) {
         mRtreeFeature_s.push_back(RtreeFeature(feature));
         mRtreeRoot.insert({mRtreeFeature_s.back(), featureInfo});
     }
 
     auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> ScorerSet {
-        mCentroidListPtr = make_shared<CentroidList>();
+        mCentroidListPtr = std::make_shared<CentroidList>();
 
         const auto minimum_diff = centroid_distance * ratio_of_minimum_diff;
 
@@ -69,9 +75,9 @@ public:
         // First part: Generate centroid grid from a given distance
         // --------------------------------------------------------
         CentroidHashSet    centroidHashSet;
-        std::hash<string>   stringToHash;
+        std::hash<std::string>   stringToHash;
         auto createCentroidFromRtreeFeature = [&](RtreeFeature & rt_feature){
-            auto centroidKeyStr = string();
+            auto centroidKeyStr = std::string();
             Feature centroidFeature;
 
             // Partition the space into small box and assign it to the centroid.
@@ -89,7 +95,7 @@ public:
                 centroidFeature.push_back(centroid_axis);
                 centroidKeyStr += fmt_string(nKey, true)+":";
             }
-            for(int i=0; i<Dimension; i++){
+            for(size_t i=0; i<Dimension; i++){
                 centroidKeyStr += +":"+fmt_string(centroid_distance);
             }
 
@@ -135,7 +141,7 @@ public:
                     continue;
                 }
 
-                vector<CentroidRtreeValue> result_s;
+                std::vector<CentroidRtreeValue> result_s;
                 centroidRtreeRoot.query(
                     bgi::intersects( c_iter->createBox(centroid_distance) ),
                     back_inserter(result_s)
@@ -191,7 +197,7 @@ public:
         }
 
         // Build the Centroid Rtree(Ptr) from the Centroid List(Ptr) 
-        mCentroidRtreePtr = make_shared<CentroidRtree>();
+        mCentroidRtreePtr = std::make_shared<CentroidRtree>();
         for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end(); c_iter++){
             mCentroidRtreePtr->insert({c_iter->getPoint(), c_iter});
         }

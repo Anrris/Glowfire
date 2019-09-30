@@ -5,25 +5,32 @@
 
 namespace glassfire{
 
-template<typename AxisType, size_t Dimension, typename FeatureInfo>
-class GlassfireType<AxisType, Dimension, FeatureInfo>::ClusterModel{
+template<typename AxisType, typename FeatureInfo>
+class ClusterModel{
     AxisType  _pi_ = 3.141592653589793;
 public:
+    typedef Eigen::Matrix<AxisType, 1, Eigen::Dynamic>               RowVector;
+    typedef Eigen::Matrix<AxisType, Eigen::Dynamic, 1>               ColVector;
+    typedef std::vector<AxisType>    Feature;
+
     Feature             mMean;
-    Matrix              mCmat;
-    Matrix              mInvCmat;
+    Eigen::MatrixXd     mCmat;
+    Eigen::MatrixXd     mInvCmat;
     AxisType            mCmatDet;
 
-    string              mModelKey;
+    std::string              mModelKey;
 
-    ClusterModel(const Feature & mean, const Matrix & cmat, const string & modelKey):
+    size_t              Dimension;
+
+    ClusterModel(const Feature & mean, const Eigen::MatrixXd & cmat, const std::string & modelKey):
         mMean(mean),
         mCmat(cmat),
         mModelKey(modelKey)
     {
+        Dimension = mean.size();
         set_covariant_matrix(mCmat);
     }
-    auto set_covariant_matrix(const Matrix & cmat) -> void {
+    auto set_covariant_matrix(const Eigen::MatrixXd & cmat) -> void {
         mCmat = cmat;
         mInvCmat = mCmat.inverse();
         mCmatDet = mCmat.determinant();
@@ -32,22 +39,22 @@ public:
         auto rowVec = feature_sub_mean_to_rowVector(feature);
         auto colVec = feature_sub_mean_to_colVector(feature);
         AxisType mahalanDistance = (rowVec * mInvCmat * colVec)(0, 0);
-        AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( pow(2 * _pi_, Dimension) * mCmatDet );
+        AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( pow(2 * _pi_, feature.size()) * mCmatDet );
         return result;
     }
     auto mean() -> const Feature & {return mMean;}
-    auto covariant_matrix() -> const Matrix & {return mCmat;}
+    auto covariant_matrix() -> const Eigen::MatrixXd & {return mCmat;}
 
 private:
-    auto feature_sub_mean_to_rowVector(const Feature &feature) -> RowVector {
-        RowVector rowVector;
+    auto feature_sub_mean_to_rowVector(const Feature &feature) -> Eigen::MatrixXd {
+        Eigen::MatrixXd rowVector(1, Dimension);
         for(size_t i=0; i<feature.size(); i++){
             rowVector(0,i) = feature[i] - mMean[i];
         }
         return rowVector;
     }
-    auto feature_sub_mean_to_colVector(const Feature &feature) -> ColVector {
-        ColVector colVector;
+    auto feature_sub_mean_to_colVector(const Feature &feature) -> Eigen::MatrixXd {
+        Eigen::MatrixXd colVector(Dimension, 1);
         for(size_t i=0; i<feature.size(); i++){
             colVector(i,0) = feature[i] - mMean[i];
         }

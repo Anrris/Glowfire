@@ -13,17 +13,17 @@ template<typename AxisType, size_t Dimension, typename FeatureInfo>
 class GlassfireType<AxisType, Dimension, FeatureInfo>::Centroid: public RtreeFeature
 {
 public:
-    typedef list<Centroid>                                  CentroidList;
-    typedef shared_ptr<CentroidList>                        CentroidListPtr;
+    typedef std::list<Centroid>                                  CentroidList;
+    typedef std::shared_ptr<CentroidList>                        CentroidListPtr;
     typedef typename CentroidList::iterator                 CentroidListIterator;
-    typedef pair<RtreePoint, CentroidListIterator>          CentroidRtreeValue;
+    typedef std::pair<RtreePoint, CentroidListIterator>          CentroidRtreeValue;
     typedef bgi::rtree<CentroidRtreeValue, bgi::linear<16>> CentroidRtree;
 
 private:
     Rtree &             mRtree_ref;
     RtreeFeature_s &    mRtreeFeature_s_ref;
     AxisType            centroid_distance;
-    string              mCentroidKeyStr;
+    std::string              mCentroidKeyStr;
 
     AxisType            N_soft_k;
     AxisType            N_k;
@@ -31,7 +31,7 @@ private:
     Matrix              mCmat;
     Matrix              mInvCmat;
     AxisType            mCmatDet;
-    AxisType            m_diff = numeric_limits<AxisType>::max();
+    AxisType            m_diff = std::numeric_limits<AxisType>::max();
     AxisType            m_minimum_difference;
 
     size_t              m_occupation_count = 0;
@@ -45,7 +45,7 @@ public:
         RtreeFeature_s&     _RtreeFeature_s_ref,
         Feature             _Mean,
         AxisType            _centroid_distance,
-        string              _centroid_key_str
+        std::string              _centroid_key_str
         ):      
             RtreeFeature        (_Mean),
             mRtree_ref          (_Rtree_ref),
@@ -79,9 +79,7 @@ public:
     auto updateMean(AxisType _minimum_difference) -> AxisType {
         m_minimum_difference = _minimum_difference;
 
-        AxisType max_diff = 0;
-
-        vector<RtreeValue> result_s;
+        std::vector<RtreeValue> result_s;
         mRtree_ref.query(
                 bgi::intersects(this->createBox(centroid_distance)), back_inserter(result_s)
         );
@@ -107,10 +105,10 @@ public:
     }
 
     auto count() -> size_t {return m_occupation_count;}
-    auto getKeyStr() -> string {return mCentroidKeyStr;}
+    auto getKeyStr() -> std::string {return mCentroidKeyStr;}
     auto needUpdateMean() -> bool { return m_diff > m_minimum_difference; }
-    auto printMean() -> string {
-        stringstream ss;
+    auto printMean() -> std::string {
+        std::stringstream ss;
         for(size_t i=0 ; i<this->getFeature().size(); i++){
             ss << this->at(i) << " ";
         }
@@ -126,14 +124,14 @@ public:
     }
 
     auto count_in_range_feature_s(CentroidRtree & centroidRtreeRef) -> void {
-        vector<CentroidRtreeValue> nearest_result;
+        std::vector<CentroidRtreeValue> nearest_result;
         centroidRtreeRef.query(bgi::nearest((RtreePoint)*this, 2), std::back_inserter(nearest_result));
 
         AxisType nearest_neighbor_distance = this->distance_to(
                 *nearest_result.front().second
         ) * 1.2;
 
-        vector<RtreeValue> result_s;
+        std::vector<RtreeValue> result_s;
         mRtree_ref.query(
                 bgi::intersects(this->createBox(nearest_neighbor_distance)), back_inserter(result_s)
         );
@@ -161,7 +159,7 @@ public:
 
             AxisType p_denumerator = 0;
 
-            list<AxisType> weightList;
+            std::list<AxisType> weightList;
             for (auto & feature : m_in_range_feature_s) {
                 if(is_fresh_start){
                     weightList.push_back(1.0);
@@ -210,7 +208,7 @@ public:
             max_diff = 0;
             for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
             for (int idx_c = 0; idx_c < tmpCmat.cols(); idx_c++) {
-                max_diff = max(max_diff, abs(diffCmat(idx_r, idx_c)) );
+                max_diff = std::max(max_diff, abs(diffCmat(idx_r, idx_c)) );
             }
         };
 
