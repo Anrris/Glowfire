@@ -214,10 +214,6 @@ public:
             }
         };
 
-        // Perform single shot calculation
-        for(int i=0; i<2; i++){
-            self_consistnt();
-        }
         do{
             self_consistnt();
         } while(max_diff > 0.001);
