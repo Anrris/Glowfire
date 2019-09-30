@@ -216,7 +216,7 @@ public:
 
         do{
             self_consistnt();
-        } while(max_diff > 0.001);
+        } while(max_diff > m_minimum_difference);
 
         return max_diff;
     }

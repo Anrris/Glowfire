@@ -25,7 +25,10 @@
 
 #include <Eigen/Dense>                          /* Eigen Library: For matrix operation*/
 
+#include "glassfire_util.h"
+
 namespace glassfire{
+
 
 using namespace std;
 namespace bg  = boost::geometry;

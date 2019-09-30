@@ -10,9 +10,9 @@
 using namespace std;
 
 #include "glassfire.h"
+#include "glassfire_util.h"
 
 int main(){
-
 
     typedef glassfire::Classifier<double,2, size_t> Classifier;
     auto feature_s  = Classifier::Feature_s();
@@ -32,8 +32,8 @@ int main(){
         classifier.append_feature(feature_s[i], i);
     }
 
-    cout << "Run lgm cluster algorithm ..." << endl;
-    auto scorerSet = classifier.run_cluster(8.0);
+    cout << "Run cluster algorithm ..." << endl;
+    auto scorerSet = classifier.run_cluster(8.0, 1, 0.0001);
 
     vector<string> cluster_id_s;
     Classifier::Feature_s result_s;

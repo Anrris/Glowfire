@@ -7,6 +7,7 @@
 #define LOCAL_GAUSSIAN_MODEL_H
 
 #include "glassfire_base.h"
+#include "glassfire_util.h"
 
 namespace glassfire 
 {
@@ -86,9 +87,11 @@ public:
                 }
                 AxisType centroid_axis = nKey*centroid_distance + 0.5*centroid_distance;
                 centroidFeature.push_back(centroid_axis);
-                centroidKeyStr += to_string(nKey)+":";
+                centroidKeyStr += fmt_string(nKey, true)+":";
             }
-            centroidKeyStr += +":"+to_string(centroid_distance);
+            for(int i=0; i<Dimension; i++){
+                centroidKeyStr += +":"+fmt_string(centroid_distance);
+            }
 
             size_t centroidHash = stringToHash(centroidKeyStr);
             if(centroidHashSet.find(centroidHash) == centroidHashSet.end()){
