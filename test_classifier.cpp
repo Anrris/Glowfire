@@ -14,12 +14,12 @@ using namespace std;
 int main(){
 
 
-    typedef glassfire::Classifier<float,2, size_t> Classifier;
+    typedef glassfire::Classifier<double,2, size_t> Classifier;
     auto feature_s  = Classifier::Feature_s();
     auto classifier = Classifier();
 
     size_t Index;
-    float dummy, axis_0, axis_1;
+    double dummy, axis_0, axis_1;
 
     cout << "-- Load feature from file ..." << endl;
     auto infile = ifstream("rand.csv");

@@ -131,7 +131,7 @@ public:
 
         AxisType nearest_neighbor_distance = this->distance_to(
                 *nearest_result.front().second
-        );
+        ) * 1.2;
 
         vector<RtreeValue> result_s;
         mRtree_ref.query(
@@ -149,13 +149,11 @@ public:
 
     auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef, CentroidListPtr centroidListPtr) -> AxisType {
 
-        size_t iteration_count = 0;
         Matrix tmpCmat, diffCmat;
         bool is_fresh_start = true;
 
         auto iterate_parameters = [&]() {
 
-            iteration_count ++;
             // Zerolize tmpCmat
             for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
             for (int idx_c = 0; idx_c < tmpCmat.cols(); idx_c++)
@@ -182,16 +180,16 @@ public:
                 for (int idx_r = 0; idx_r < tmpCmat.rows(); idx_r++)
                 for (int idx_c = 0; idx_c < tmpCmat.rows(); idx_c++) {
                     if(is_fresh_start){
-                        tmpCmat(idx_r, idx_c) += colMeanVec(idx_r, 0) * colMeanVec(idx_c, 0)/m_in_range_feature_s.size();
+                        tmpCmat(idx_r, idx_c) += colMeanVec(idx_r, 0) * colMeanVec(idx_c, 0)/
+                                                    m_in_range_feature_s.size();
                     }
                     else{
-                        tmpCmat(idx_r, idx_c) += weight * colMeanVec(idx_r, 0) * colMeanVec(idx_c, 0);
+                        tmpCmat(idx_r, idx_c) += (weight/(weight+0.000001)) * 
+                                                 colMeanVec(idx_r, 0) * colMeanVec(idx_c, 0)/
+                                                    m_in_range_feature_s.size();
                     }
                 }
             }
-            //cout << tmpCmat << endl;
-            //cout << "..." << endl;
-
             diffCmat = mCmat - tmpCmat;
 
             mCmat = tmpCmat;
@@ -199,14 +197,7 @@ public:
             mCmatDet = mCmat.determinant();
         };
 
-        //cout << "------  " ;
-        //auto center = this->getFeature();
-        //for(auto val: center){
-        //    cout << val << " : ";
-        //}
-        //cout << endl;
-
-        AxisType max_diff = numeric_limits<AxisType>::max();
+        AxisType max_diff = 0;
 
         auto self_consistnt = [&](){
             iterate_parameters();
@@ -224,9 +215,12 @@ public:
         };
 
         // Perform single shot calculation
-        for(int i=0; i<1; i++){
+        for(int i=0; i<2; i++){
             self_consistnt();
         }
+        do{
+            self_consistnt();
+        } while(max_diff > 0.001);
 
         return max_diff;
     }
