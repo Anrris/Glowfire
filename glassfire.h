@@ -12,11 +12,20 @@
 namespace glassfire 
 {
 
+template<typename AxisType, typename FeatureInfo>
+class ClassifierBase{
+    typedef vector<AxisType> Feature;
+public:
+    virtual ~ClassifierBase(){}
+    virtual void append_feature(Feature feature, FeatureInfo featureInfo) =0 ;
+    virtual auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> =0 ;
+};
+
 //===================================
 //--- Implementation of Classifier
 //-----------------------------------
 template<typename AxisType, size_t Dimension, typename FeatureInfo>
-class Classifier
+class Classifier: public ClassifierBase<AxisType, FeatureInfo>
 {
 public:
     typedef GlassfireType<AxisType,Dimension,FeatureInfo>   GlassfireType;
@@ -56,17 +65,13 @@ public:
         mRtreeFeature_s()
     { }
 
-    void append_feature(Feature feature, const RtreePoint &p, FeatureInfo featureInfo){
-        //mRtreeFeature_s.push_back(RtreeFeature(feature, p));
-        mRtreeRoot.insert({p, featureInfo});
-    }
-
     void append_feature(Feature feature, FeatureInfo featureInfo) {
         mRtreeFeature_s.push_back(RtreeFeature(feature));
         mRtreeRoot.insert({mRtreeFeature_s.back(), featureInfo});
     }
 
-    auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> ScorerSet {
+    //auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> ScorerSet {
+    auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> {
         mCentroidListPtr = std::make_shared<CentroidList>();
 
         const auto minimum_diff = centroid_distance * ratio_of_minimum_diff;
@@ -203,7 +208,7 @@ public:
         }
 
         //return mCentroidListPtr->size();
-        return ScorerSet(mCentroidListPtr, mCentroidRtreePtr);
+        return std::make_shared<ScorerSet>(ScorerSet(mCentroidListPtr, mCentroidRtreePtr));
     }
 };
 //-----------------------------------

@@ -4,6 +4,7 @@
 # All rights reserved.
 #
 import numpy as np
+import pandas as pd
 
 
 class NDRandClusterGenerator(object):
@@ -15,6 +16,7 @@ class NDRandClusterGenerator(object):
         self.point_collections = []
         self.mean_cov_collections = []
         self.cluster_count = 0
+        self.data = []
 
     def random_symm_matrix(self, diag, offdiag):
         asymm = np.random.rand(self.dimension, self.dimension)
@@ -38,6 +40,7 @@ class NDRandClusterGenerator(object):
         self.mean_cov_collections.append((mean, cov))
         for elem in np.random.multivariate_normal(mean, cov, count).tolist():
             self.point_collections.append((self.cluster_count, elem))
+            self.data.append(elem)
         self.cluster_count += 1
 
     def seed_in_range(self, mean, count, diag=0, offdiag=1):
@@ -45,6 +48,11 @@ class NDRandClusterGenerator(object):
 
     def save_data(self, filename):
         # Save the distributed data point to file
+
+        df = pd.DataFrame(self.data)
+        df.to_csv('test.csv')
+
+        self.data = []
         out = open(filename+".csv", 'w')
         for row in self.point_collections:
             (cluster, data) = row

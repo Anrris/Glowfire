@@ -28,9 +28,10 @@ public:
         mModelKey(modelKey)
     {
         Dimension = mean.size();
-        set_covariant_matrix(mCmat);
+        set_mean_cmat(mean, mCmat);
     }
-    auto set_covariant_matrix(const Eigen::MatrixXd & cmat) -> void {
+    auto set_mean_cmat(const Feature & mean, const Eigen::MatrixXd & cmat) -> void {
+        mMean = mean;
         mCmat = cmat;
         mInvCmat = mCmat.inverse();
         mCmatDet = mCmat.determinant();

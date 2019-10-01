@@ -12,8 +12,9 @@ namespace glassfire{
     public:
         typedef std::vector<AxisType> Feature;
 
-        ~ScorerSetBase(){}
+        virtual ~ScorerSetBase(){}
         virtual auto calc_scores(const Feature & feature) -> std::map<AxisType, std::string, std::greater<AxisType>>  =0;
+        virtual auto get_model_set() -> std::vector<ClusterModel<AxisType, FeatureInfo>> =0;
         virtual auto query_centroids(const Feature & feature, AxisType box_distance) -> std::pair<AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>> = 0;
 
     };
@@ -52,6 +53,14 @@ namespace glassfire{
             std::vector<Centroid> retval;
             for(const auto & iter: *mCentroidListPtr){
                 retval.push_back(iter);
+            }
+            return retval;
+        }
+
+        auto get_model_set() -> std::vector<ClusterModel> {
+            std::vector<ClusterModel> retval;
+            for(auto & iter: *mCentroidListPtr){
+                retval.push_back(iter.get_model());
             }
             return retval;
         }

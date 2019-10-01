@@ -12,7 +12,6 @@ using namespace std;
 #include "glassfire.h"
 
 int main(){
-
     typedef glassfire::Classifier<double,2, size_t> Classifier;
     auto feature_s  = Classifier::Feature_s();
     auto classifier = Classifier();
