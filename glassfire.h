@@ -12,13 +12,23 @@
 namespace glassfire 
 {
 
+
 template<typename AxisType, typename FeatureInfo>
 class ClassifierBase{
     typedef vector<AxisType> Feature;
+    typedef ClusterModel<AxisType, FeatureInfo>            ClusterModel;
 public:
+    typedef std::vector<std::tuple<size_t, AxisType, FeatureInfo, std::string, Feature>> DataQueryReturnType;
+
     virtual ~ClassifierBase(){}
     virtual void append_feature(Feature feature, FeatureInfo featureInfo) =0 ;
-    virtual auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> =0 ;
+    virtual auto run_cluster(
+                    AxisType centroid_distance,
+                    uint16_t minimal_count = 1,
+                    AxisType ratio_of_minimum_diff = 0.01
+                    ) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> =0 ;
+
+    virtual auto query_data(ClusterModel & cm, AxisType box_size) -> DataQueryReturnType =0 ;
 };
 
 //===================================
@@ -30,13 +40,16 @@ class Classifier: public ClassifierBase<AxisType, FeatureInfo>
 public:
     typedef GlassfireType<AxisType,Dimension,FeatureInfo>   GlassfireType;
 
+    typedef typename ClassifierBase<AxisType, FeatureInfo>::DataQueryReturnType DataQueryReturnType;
+
     typedef typename GlassfireType::Feature                 Feature;
     typedef typename GlassfireType::Feature_s               Feature_s;
 
     typedef typename GlassfireType::CentroidRtreeValue      CentroidRtreeValue;
 
     typedef typename GlassfireType::Rtree                   Rtree;
-    typedef typename GlassfireType::RtreePoint   RtreePoint;
+    typedef typename GlassfireType::RtreeValue              RtreeValue;
+    typedef typename GlassfireType::RtreePoint              RtreePoint;
     typedef typename GlassfireType::RtreeFeature            RtreeFeature;
     typedef typename GlassfireType::RtreeFeature_s          RtreeFeature_s;
 
@@ -50,7 +63,7 @@ public:
     typedef typename GlassfireType::ScorerSet               ScorerSet;
 
     typedef std::unordered_set<size_t>                      CentroidHashSet;
-    typedef typename GlassfireType::ClusterModel            ClusterModel;
+    typedef ClusterModel<AxisType, FeatureInfo>             ClusterModel;
 
 private:
     Rtree               mRtreeRoot;
@@ -66,12 +79,42 @@ public:
     { }
 
     void append_feature(Feature feature, FeatureInfo featureInfo) {
-        mRtreeFeature_s.push_back(RtreeFeature(feature));
-        mRtreeRoot.insert({mRtreeFeature_s.back(), featureInfo});
+        auto tmp_RtreeFeature = RtreeFeature(feature);
+        tmp_RtreeFeature.setInfo(featureInfo);
+        mRtreeFeature_s.push_back(tmp_RtreeFeature);
+        mRtreeRoot.insert({mRtreeFeature_s.back(), mRtreeRoot.size()});
     }
 
-    //auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> ScorerSet {
-    auto run_cluster(AxisType centroid_distance, uint16_t minimal_count = 1, AxisType ratio_of_minimum_diff = 0.01) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> {
+    auto query_data(ClusterModel & cm, AxisType box_size) -> DataQueryReturnType{
+
+        RtreeFeature rtfeat(cm.mean());
+
+        std::vector<RtreeValue> result_s;
+        mRtreeRoot.query(
+                bgi::intersects(rtfeat.createBox(box_size)), back_inserter(result_s)
+        );
+
+        DataQueryReturnType result_collections;
+        for(auto &iter: result_s){
+            result_collections.push_back(
+                std::make_tuple(
+                    iter.second,
+                    cm.eval(mRtreeFeature_s[iter.second].getFeature()),
+                    mRtreeFeature_s[iter.second].getInfo(),
+                    cm.model_key(),
+                    mRtreeFeature_s[iter.second].getFeature()
+                )
+            );
+        }
+        return result_collections;
+    }
+
+    auto run_cluster(
+        AxisType centroid_distance,
+        uint16_t minimal_count = 1,
+        AxisType ratio_of_minimum_diff = 0.01
+        ) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> {
+
         mCentroidListPtr = std::make_shared<CentroidList>();
 
         const auto minimum_diff = centroid_distance * ratio_of_minimum_diff;
@@ -214,6 +257,38 @@ public:
 //-----------------------------------
 //--- Implementation of Classifier
 //===================================
+
+template<typename AxisType, typename FeatureInfo, size_t Dimension>
+class ClassifierFactory{
+    typedef std::shared_ptr<ClassifierBase<AxisType, FeatureInfo>> ClassifierBasePtr;
+
+    template<size_t x, size_t to>
+    struct t_static_for {
+        void create(std::vector<ClassifierBasePtr> &classifierBaseSet) {
+            classifierBaseSet.push_back(std::make_shared<Classifier<AxisType,x,FeatureInfo>>());
+            t_static_for<x+1,to>().create(classifierBaseSet);
+        }
+    };
+
+    template<size_t to>
+    struct t_static_for<to, to> {
+        void create(std::vector<ClassifierBasePtr> &classifierBaseSet) {}
+    };
+
+    typedef t_static_for<1, Dimension+1>    static_for;
+
+public:
+    auto create() -> std::vector<ClassifierBasePtr> {
+        std::vector<ClassifierBasePtr> classifierBaseSet;
+
+        static_for  m_static_for;
+        m_static_for.create(classifierBaseSet);
+        return classifierBaseSet;
+    }
+
+};
+
+
 
 };
 

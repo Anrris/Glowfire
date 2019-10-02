@@ -65,7 +65,7 @@ public:
 
     typedef bgm::point<AxisType, Dimension, bg::cs::cartesian>  RtreePoint;
     typedef bgm::box<RtreePoint>                                RtreeBox;
-    typedef std::pair<RtreePoint, FeatureInfo>                  RtreeValue;
+    typedef std::pair<RtreePoint, size_t>                       RtreeValue;
     typedef bgi::rtree<RtreeValue, bgi::linear<16>>             Rtree;
 
     typedef Eigen::Matrix<AxisType, Dimension, Dimension>       Matrix;
@@ -77,9 +77,10 @@ public:
     //-----------------------------------
     class RtreeFeature: public RtreePoint
     {
-        //static_for  m_static_for;
         point_copier<AxisType, Dimension>    copier;
         Feature     mFeature;
+        FeatureInfo mInfo;
+
     public:
         RtreeFeature(){}
         RtreeFeature(const Feature & feature): mFeature(feature) {
@@ -92,6 +93,8 @@ public:
         auto getFeature() -> const Feature & {
             return mFeature;
         }
+        auto setInfo(const FeatureInfo & info) -> void {mInfo = info;}
+        auto getInfo() -> const FeatureInfo & {return mInfo;}
         auto at(size_t index) -> const AxisType & {
             return mFeature[index];
         }

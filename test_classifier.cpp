@@ -12,7 +12,8 @@ using namespace std;
 #include "glassfire.h"
 
 int main(){
-    typedef glassfire::Classifier<double,2, size_t> Classifier;
+
+    typedef glassfire::Classifier<double,2, std::string> Classifier;
     auto feature_s  = Classifier::Feature_s();
     auto classifier = Classifier();
 
@@ -27,7 +28,7 @@ int main(){
 
     cout << "Append features ..." << endl;
     for(size_t i=0; i<feature_s.size(); i++){
-        classifier.append_feature(feature_s[i], i);
+        classifier.append_feature(feature_s[i], "test"+std::to_string(i));
     }
 
     cout << "Run cluster algorithm ..." << endl;
@@ -38,7 +39,7 @@ int main(){
 
     cout << "Predict scores from the scorer ..." << endl;
     for(auto & feature: feature_s){
-        auto score_dict = scorerSet.calc_scores(feature);
+        auto score_dict = scorerSet->calc_scores(feature);
 
         cluster_id_s.push_back(score_dict.begin()->second);
 
@@ -62,19 +63,29 @@ int main(){
 
     cout << "Print Centroid id/positions ..." << endl;
     outfile = ofstream("api-demo_centroid.csv");
-    auto centroids = scorerSet.get_centroids();
+    auto centroids = scorerSet->get_model_set();
     for(auto iter: centroids){
-        auto feature = iter.getFeature();
-        cout << iter.getKeyStr() << " " << feature[0] << " " << feature[1] << endl;
-        outfile << iter.getKeyStr() << " " << feature[0] << " " << feature[1] << endl;
+        auto feature = iter.mean();
+        cout << iter.model_key() << " " << iter.cmean() << endl;
+        cout << iter.cov_mat() << endl;
+        outfile << iter.model_key() << " " << iter.cmean() << endl;
     }
     outfile.close();
 
-    auto result = scorerSet.query_centroids({23.8, 52.7}, 20);
-    auto model = result.second;
-    model = result.second;
-    cout << model.mModelKey << endl;
-    cout << model.eval({24.0265, 52.9805}) << endl;
+    auto result = scorerSet->query({23.8, 52.7}, 20);
+    cout << std::get<0>(result)<<endl;
+    cout << std::get<1>(result)<<endl;
+    cout << std::get<2>(result).model_key()<<endl;
+
+    auto tmp = classifier.query_data(std::get<2>(result), 0.5);
+
+    for(auto &iter: tmp){
+        std::cout << std::get<0>(iter) << std::endl;
+        std::cout << std::get<1>(iter) << std::endl;
+        std::cout << std::get<2>(iter) << std::endl;
+        std::cout << std::get<4>(iter)[0] << std::endl;
+        std::cout << "-------" << std::endl;
+    }
 
     return 0;
 }

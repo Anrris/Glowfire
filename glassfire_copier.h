@@ -15,7 +15,7 @@ class point_copier{
     typedef std::vector<AxisType> Feature;
     typedef bgm::point<AxisType, Dimension, bg::cs::cartesian>  RtreePoint;
 
-    template<size_t _x_, size_t to>
+    template<size_t x, size_t to>
     struct t_static_for
     {
         typedef std::vector<AxisType> Feature;
@@ -32,19 +32,19 @@ class point_copier{
         void copy_to(Feature &coord, RtreePoint &pt) {
             checkDimension(coord.size());
 
-            m_val_min = std::min(m_val_min, coord.at(_x_));
-            m_val_max = std::max(m_val_max, coord.at(_x_));
+            m_val_min = std::min(m_val_min, coord.at(x));
+            m_val_max = std::max(m_val_max, coord.at(x));
 
-            pt.template set<_x_>(coord.at(_x_));
-            t_static_for<_x_+1,to>().copy_to(coord, pt);
+            pt.template set<x>(coord.at(x));
+            t_static_for<x+1,to>().copy_to(coord, pt);
         }
 
         void create_box_corner(AxisType dist, Feature &coord, RtreePoint &pt1, RtreePoint &pt2) {
             checkDimension(coord.size());
 
-            pt1.template set<_x_>(coord.at(_x_)-dist);
-            pt2.template set<_x_>(coord.at(_x_)+dist);
-            t_static_for<_x_+1,to>().create_box_corner(dist, coord, pt1, pt2);
+            pt1.template set<x>(coord.at(x)-dist);
+            pt2.template set<x>(coord.at(x)+dist);
+            t_static_for<x+1,to>().create_box_corner(dist, coord, pt1, pt2);
         }
     };
 

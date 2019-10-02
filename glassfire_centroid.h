@@ -13,10 +13,10 @@ template<typename AxisType, size_t Dimension, typename FeatureInfo>
 class GlassfireType<AxisType, Dimension, FeatureInfo>::Centroid: public RtreeFeature
 {
 public:
-    typedef std::list<Centroid>                                  CentroidList;
-    typedef std::shared_ptr<CentroidList>                        CentroidListPtr;
+    typedef std::list<Centroid>                             CentroidList;
+    typedef std::shared_ptr<CentroidList>                   CentroidListPtr;
     typedef typename CentroidList::iterator                 CentroidListIterator;
-    typedef std::pair<RtreePoint, CentroidListIterator>          CentroidRtreeValue;
+    typedef std::pair<RtreePoint, CentroidListIterator>     CentroidRtreeValue;
     typedef bgi::rtree<CentroidRtreeValue, bgi::linear<16>> CentroidRtree;
 
 private:

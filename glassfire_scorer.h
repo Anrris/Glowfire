@@ -1,6 +1,7 @@
-
 #ifndef SCORER_H
 #define SCORER_H
+
+#include <tuple>
 
 #include "glassfire_base.h"
 #include "glassfire_cluster_model.h"
@@ -15,7 +16,7 @@ namespace glassfire{
         virtual ~ScorerSetBase(){}
         virtual auto calc_scores(const Feature & feature) -> std::map<AxisType, std::string, std::greater<AxisType>>  =0;
         virtual auto get_model_set() -> std::vector<ClusterModel<AxisType, FeatureInfo>> =0;
-        virtual auto query_centroids(const Feature & feature, AxisType box_distance) -> std::pair<AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>> = 0;
+        virtual auto query(const Feature & feature, AxisType box_distance) -> std::tuple<bool, AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>, std::string> = 0;
 
     };
     //===================================
@@ -65,7 +66,10 @@ namespace glassfire{
             return retval;
         }
 
-        auto query_centroids(const Feature & feature, AxisType box_distance) -> std::pair<AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>> {
+        auto query(
+            const Feature & feature,
+            AxisType box_distance
+            ) -> std::tuple<bool, AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>, std::string> {
 
             auto rtreeFeature = RtreeFeature(feature);
 
@@ -79,8 +83,12 @@ namespace glassfire{
                 auto score = crv_iter.second->scoreOfFeature(feature);
                 centroidMap.insert({ score, crv_iter.second->get_model() });
             }
+            if(centroidMap.size()==0){
+                std::cout << "DDD" << endl;
+                return std::make_tuple(false, -1, glassfire::ClusterModel<AxisType,FeatureInfo>(), "Cluster not in range!");
+            }
 
-            return *centroidMap.begin();
+            return std::make_tuple(true, centroidMap.begin()->first, centroidMap.begin()->second, "Cluster has been found.");
         }
 
         auto cluser_count() -> size_t { return mCentroidListPtr->size(); }
