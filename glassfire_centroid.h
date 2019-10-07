@@ -37,15 +37,18 @@ private:
     size_t              m_occupation_count = 0;
 
     Feature_s           m_in_range_feature_s;
+    std::vector<size_t> m_in_range_feature_s_index;
+    AxisType            m_distance_to_nearest_data_point;
 
     const AxisType  _pi_ = 3.141592653589793;
 public:
+    // TODO: Add regularization to the covariant matrix
     Centroid(
         Rtree &             _Rtree_ref,
         RtreeFeature_s&     _RtreeFeature_s_ref,
         Feature             _Mean,
         AxisType            _centroid_distance,
-        std::string              _centroid_key_str
+        std::string         _centroid_key_str
         ):      
             RtreeFeature        (_Mean),
             mRtree_ref          (_Rtree_ref),
@@ -125,30 +128,50 @@ public:
 
     auto count_in_range_feature_s(CentroidRtree & centroidRtreeRef) -> void {
         std::vector<CentroidRtreeValue> nearest_result;
+
+        // Query the nearest Centroid
+        // The centroid itself is included inside the centroidRtree(Ref)
         centroidRtreeRef.query(bgi::nearest((RtreePoint)*this, 2), std::back_inserter(nearest_result));
 
-        AxisType nearest_neighbor_distance = this->distance_to(
-                *nearest_result.front().second
-        ) * 1.2;
+        // Calculate the distance of nearest neighborhood.
+        AxisType nearest_neighbor_distance = 0;
+        for (auto &iter: nearest_result){
+            nearest_neighbor_distance =
+                std::max(
+                    this->distance_to( *iter.second),
+                    nearest_neighbor_distance
+                );
+        }
 
+        // Using nearest_neighbor_distance and create box to query the surrounding data points.
         std::vector<RtreeValue> result_s;
         mRtree_ref.query(
                 bgi::intersects(this->createBox(nearest_neighbor_distance)), back_inserter(result_s)
         );
 
+        // Refine the data points to be inside a circle of nearest_neighbor_distance.
         for (auto &it : result_s) {
             Feature feature = mRtreeFeature_s_ref[it.second].getFeature();
+            m_in_range_feature_s_index.push_back(it.second);
             if (this->distance_to(feature) < nearest_neighbor_distance)
                 m_in_range_feature_s.push_back(feature);
         }
+
+        std::vector<RtreeValue> nearest_data_point;
+        mRtree_ref.query(bgi::nearest((RtreePoint)*this, 1), std::back_inserter(nearest_data_point));
+
+        Feature feature = mRtreeFeature_s_ref[nearest_data_point.front().second].getFeature();
+        m_distance_to_nearest_data_point = this->distance_to(feature);
     }
 
     auto get_in_range_feature_s() -> const Feature_s &{ return m_in_range_feature_s; }
 
-    auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef, CentroidListPtr centroidListPtr) -> AxisType {
+    auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef, CentroidListPtr centroidListPtr, bool need_regularize_cmat = true) -> AxisType {
 
         Matrix tmpCmat, diffCmat;
         bool is_fresh_start = true;
+
+        AxisType weight_discriminator_epsilon = 0.000001;
 
         auto iterate_parameters = [&]() {
 
@@ -159,6 +182,7 @@ public:
 
             AxisType p_denumerator = 0;
 
+            // Create the weightList to discriminate the datapoint.
             std::list<AxisType> weightList;
             for (auto & feature : m_in_range_feature_s) {
                 if(is_fresh_start){
@@ -169,6 +193,8 @@ public:
                 }
                 p_denumerator += weightList.back();
             }
+
+            // Loop through all in-range-reatures (data points) to create the covariant matrix
             for (auto & feature : m_in_range_feature_s) {
 
                 auto colMeanVec = feature_sub_mean_to_colVector(feature);
@@ -182,12 +208,20 @@ public:
                                                     m_in_range_feature_s.size();
                     }
                     else{
-                        tmpCmat(idx_r, idx_c) += (weight/(weight+0.000001)) * 
+                        tmpCmat(idx_r, idx_c) += (weight/(weight + weight_discriminator_epsilon)) * 
                                                  colMeanVec(idx_r, 0) * colMeanVec(idx_c, 0)/
                                                     m_in_range_feature_s.size();
                     }
                 }
             }
+
+            //if(need_regularize_cmat){
+            //    // Regularize the covariance matrix by using the distance of the nearest data point.
+            //    for (int idx = 0; idx < tmpCmat.rows(); idx++){
+            //        tmpCmat(idx, idx) += m_distance_to_nearest_data_point;
+            //    }
+            //}
+
             diffCmat = mCmat - tmpCmat;
 
             mCmat = tmpCmat;
@@ -219,10 +253,13 @@ public:
         return max_diff;
     }
 
-
-
     auto get_model() -> ClusterModel {
-        return ClusterModel(this->getFeature(), getCovariantMatrix(), mCentroidKeyStr);
+        return ClusterModel(
+                    this->getFeature(),
+                    getCovariantMatrix(),
+                    mCentroidKeyStr,
+                    m_in_range_feature_s_index
+                    );
     }
 
     auto getCovariantMatrix() -> const Matrix & { return mCmat; }

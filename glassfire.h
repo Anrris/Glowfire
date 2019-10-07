@@ -12,7 +12,6 @@
 namespace glassfire 
 {
 
-
 template<typename AxisType, typename FeatureInfo>
 class ClassifierBase{
     typedef vector<AxisType> Feature;
@@ -72,6 +71,7 @@ private:
 
     CentroidRtreePtr    mCentroidRtreePtr;
 
+    bool    m_cluster_state_successfull = false;
 public:
     Classifier():
         mRtreeRoot(),
@@ -114,6 +114,15 @@ public:
         uint16_t minimal_count = 1,
         AxisType ratio_of_minimum_diff = 0.01
         ) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> {
+
+        // --------------------------------------------------------
+        // --- If the entire process go through the end------------
+        // ----m_cluster_state_successfull will set to be true. ---
+        // --------------------------------------------------------
+        m_cluster_state_successfull = false;
+        // --------------------------------------------------------
+        // --------------------------------------------------------
+        // --------------------------------------------------------
 
         mCentroidListPtr = std::make_shared<CentroidList>();
 
@@ -250,7 +259,15 @@ public:
             mCentroidRtreePtr->insert({c_iter->getPoint(), c_iter});
         }
 
-        //return mCentroidListPtr->size();
+        // --------------------------------------------------------
+        // --------------------------------------------------------
+        // --------------------------------------------------------
+        m_cluster_state_successfull = true;
+        // --------------------------------------------------------
+        // ---Ending the cluster analysis, setting up--------------
+        // --- m_cluster_state_successfull true. ------------------
+        // --------------------------------------------------------
+
         return std::make_shared<ScorerSet>(ScorerSet(mCentroidListPtr, mCentroidRtreePtr));
     }
 };

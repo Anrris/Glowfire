@@ -23,6 +23,8 @@ private:
     std::string mModelKey;
     size_t      Dimension;
 
+    std::vector<size_t> m_in_range_feature_s_index;
+
     auto set_mean_cmat(const Feature & mean, const Matrix & cmat) -> void {
         Dimension = mean.size();
         mRowMean = RowVector(1, Dimension);
@@ -36,10 +38,15 @@ private:
 public:
     ClusterModel(){}
 
-    ClusterModel(const Feature & mean, const Matrix & cmat, const std::string & modelKey):
-        mMean(mean),
-        mCmat(cmat),
-        mModelKey(modelKey)
+    ClusterModel(
+        const Feature & mean,
+        const Matrix & cmat,
+        const std::string & modelKey,
+        const std::vector<size_t> & in_range_feature_s_index
+        ):  mMean(mean),
+            mCmat(cmat),
+            mModelKey(modelKey),
+            m_in_range_feature_s_index(in_range_feature_s_index)
     {
         set_mean_cmat(mean, mCmat);
     }
@@ -48,13 +55,15 @@ public:
         auto rowVec = feature_sub_mean_to_rowVector(feature);
         auto colVec = feature_sub_mean_to_colVector(feature);
         AxisType mahalanDistance = (rowVec * mInvCmat * colVec)(0, 0);
-        AxisType result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( pow(2 * _pi_, feature.size()) * mCmatDet );
+        AxisType result;
+        result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( pow(2 * _pi_, feature.size()) * mCmatDet );
         return result;
     }
     auto cmean()-> const RowVector & {return mRowMean;}
     auto mean() -> const Feature & {return mMean;}
     auto cov_mat() -> const Matrix & {return mCmat;}
     auto model_key() -> const string & {return mModelKey;}
+    auto in_range_data_index() -> const std::vector<size_t> & {return m_in_range_feature_s_index;}
 
 private:
     auto feature_sub_mean_to_rowVector(const Feature &feature) -> Matrix {

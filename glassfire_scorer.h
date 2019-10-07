@@ -14,10 +14,12 @@ namespace glassfire{
         typedef std::vector<AxisType> Feature;
 
         virtual ~ScorerSetBase(){}
-        virtual auto calc_scores(const Feature & feature) -> std::map<AxisType, std::string, std::greater<AxisType>>  =0;
-        virtual auto get_model_set() -> std::vector<ClusterModel<AxisType, FeatureInfo>> =0;
-        virtual auto query(const Feature & feature, AxisType box_distance) -> std::tuple<bool, AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>, std::string> = 0;
-
+        virtual auto calc_scores(const Feature & feature)
+                        -> std::map<AxisType, std::string, std::greater<AxisType>>  =0;
+        virtual auto get_model_set()
+                        -> std::vector<ClusterModel<AxisType, FeatureInfo>> =0;
+        virtual auto query(const Feature & feature, AxisType box_distance)
+                        -> std::tuple<bool, AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>, std::string> = 0;
     };
     //===================================
     //--- Implementation of ScorerSet --
@@ -84,7 +86,6 @@ namespace glassfire{
                 centroidMap.insert({ score, crv_iter.second->get_model() });
             }
             if(centroidMap.size()==0){
-                std::cout << "DDD" << endl;
                 return std::make_tuple(false, -1, glassfire::ClusterModel<AxisType,FeatureInfo>(), "Cluster not in range!");
             }
 
