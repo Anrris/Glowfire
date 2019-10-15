@@ -22,8 +22,8 @@ public:
 private:
     Rtree &             mRtree_ref;
     RtreeFeature_s &    mRtreeFeature_s_ref;
-    AxisType            centroid_distance;
-    std::string              mCentroidKeyStr;
+    AxisType            m_box_len;
+    std::string         mCentroidKeyStr;
 
     AxisType            N_soft_k;
     AxisType            N_k;
@@ -42,18 +42,17 @@ private:
 
     const AxisType  _pi_ = 3.141592653589793;
 public:
-    // TODO: Add regularization to the covariant matrix
     Centroid(
         Rtree &             _Rtree_ref,
         RtreeFeature_s&     _RtreeFeature_s_ref,
         Feature             _Mean,
-        AxisType            _centroid_distance,
+        AxisType            _box_len,
         std::string         _centroid_key_str
         ):      
             RtreeFeature        (_Mean),
             mRtree_ref          (_Rtree_ref),
             mRtreeFeature_s_ref (_RtreeFeature_s_ref),
-            centroid_distance   (_centroid_distance),
+            m_box_len           (_box_len),
             mCentroidKeyStr     (_centroid_key_str)
     {
         // Zerolize mCmat
@@ -84,7 +83,7 @@ public:
 
         std::vector<RtreeValue> result_s;
         mRtree_ref.query(
-                bgi::intersects(this->createBox(centroid_distance)), back_inserter(result_s)
+                bgi::intersects(this->createBox(m_box_len)), back_inserter(result_s)
         );
 
         m_occupation_count = result_s.size();
@@ -126,34 +125,38 @@ public:
         return result;
     }
 
-    auto count_in_range_feature_s(CentroidRtree & centroidRtreeRef) -> void {
+    auto count_in_range_feature_s(CentroidRtree & centroidRtreeRef, bool using_box_len = true) -> void {
         std::vector<CentroidRtreeValue> nearest_result;
 
         // Query the nearest Centroid
         // The centroid itself is included inside the centroidRtree(Ref)
         centroidRtreeRef.query(bgi::nearest((RtreePoint)*this, 2), std::back_inserter(nearest_result));
 
-        // Calculate the distance of nearest neighborhood.
-        AxisType nearest_neighbor_distance = 0;
-        for (auto &iter: nearest_result){
-            nearest_neighbor_distance =
-                std::max(
-                    this->distance_to( *iter.second),
-                    nearest_neighbor_distance
-                );
+        AxisType query_box_len = m_box_len;
+        if(!using_box_len){
+            // Calculate the distance of nearest neighborhood.
+            AxisType nearest_neighbor_distance = 0;
+            for (auto &iter: nearest_result){
+                nearest_neighbor_distance =
+                    std::max(
+                        this->distance_to( *iter.second),
+                        nearest_neighbor_distance
+                    );
+            }
+            query_box_len = nearest_neighbor_distance;
         }
 
         // Using nearest_neighbor_distance and create box to query the surrounding data points.
         std::vector<RtreeValue> result_s;
         mRtree_ref.query(
-                bgi::intersects(this->createBox(nearest_neighbor_distance)), back_inserter(result_s)
+                bgi::intersects(this->createBox(query_box_len)), back_inserter(result_s)
         );
 
         // Refine the data points to be inside a circle of nearest_neighbor_distance.
         for (auto &it : result_s) {
             Feature feature = mRtreeFeature_s_ref[it.second].getFeature();
             m_in_range_feature_s_index.push_back(it.second);
-            if (this->distance_to(feature) < nearest_neighbor_distance)
+            if (this->distance_to(feature) < query_box_len)
                 m_in_range_feature_s.push_back(feature);
         }
 
@@ -161,12 +164,17 @@ public:
         mRtree_ref.query(bgi::nearest((RtreePoint)*this, 1), std::back_inserter(nearest_data_point));
 
         Feature feature = mRtreeFeature_s_ref[nearest_data_point.front().second].getFeature();
+
+        // TODO: Consider deprecate this variable.
         m_distance_to_nearest_data_point = this->distance_to(feature);
     }
 
     auto get_in_range_feature_s() -> const Feature_s &{ return m_in_range_feature_s; }
 
-    auto updateCovariantMatrix(CentroidRtree & centroidRtreeRef, CentroidListPtr centroidListPtr, bool need_regularize_cmat = true) -> AxisType {
+    auto updateCovariantMatrix(
+            CentroidRtree & centroidRtreeRef,
+            CentroidListPtr centroidListPtr,
+            bool need_regularize_cmat = true) -> AxisType {
 
         Matrix tmpCmat, diffCmat;
         bool is_fresh_start = true;

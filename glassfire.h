@@ -24,7 +24,8 @@ public:
     virtual auto run_cluster(
                     AxisType centroid_distance,
                     uint16_t minimal_count = 1,
-                    AxisType ratio_of_minimum_diff = 0.01
+                    AxisType ratio_of_minimum_diff = 0.01,
+                    bool     using_centroid_distance = true
                     ) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> =0 ;
 
     virtual auto query_data(ClusterModel & cm, AxisType box_size) -> DataQueryReturnType =0 ;
@@ -112,7 +113,8 @@ public:
     auto run_cluster(
         AxisType centroid_distance,
         uint16_t minimal_count = 1,
-        AxisType ratio_of_minimum_diff = 0.01
+        AxisType ratio_of_minimum_diff = 0.01,
+        bool     using_centroid_distance = true
         ) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> {
 
         // --------------------------------------------------------
@@ -190,7 +192,7 @@ public:
             for(auto c_iter = mCentroidListPtr->begin(); c_iter != mCentroidListPtr->end();){
                 // If centroid obtain too few data points.
                 // Immediately delete.
-                if( needCleanTooFewCountCentroid && c_iter->count() <= minimal_count){
+                if( needCleanTooFewCountCentroid && c_iter->count() < minimal_count){
                     auto tmp_iter = c_iter;
                     c_iter++;
                     centroidRtreeRoot.remove({tmp_iter->getPoint(), tmp_iter});
@@ -246,7 +248,7 @@ public:
         // ----------------------------------------------------
 
         for(auto & centroid: *mCentroidListPtr){
-            centroid.count_in_range_feature_s(centroidRtreeRoot);
+            centroid.count_in_range_feature_s(centroidRtreeRoot, using_centroid_distance);
         }
         
         for(auto & centroid: *mCentroidListPtr){

@@ -14,26 +14,34 @@ public:
     typedef std::vector<AxisType>    Feature;
 private:
     AxisType  _pi_ = 3.141592653589793;
+    std::string mModelKey;
+    std::vector<size_t> m_in_range_feature_s_index;
+
     RowVector   mRowMean;
     Feature     mMean;
 
     Matrix      mCmat;
+    AxisType    mCmatRegularize;
     Matrix      mInvCmat;
     AxisType    mCmatDet;
-    std::string mModelKey;
     size_t      Dimension;
 
-    std::vector<size_t> m_in_range_feature_s_index;
 
-    auto set_mean_cmat(const Feature & mean, const Matrix & cmat) -> void {
+    auto set_parameters(const Feature & mean, const Matrix & cmat, const AxisType &cmat_regularize) -> void {
         Dimension = mean.size();
         mRowMean = RowVector(1, Dimension);
         for(size_t i=0; i<mean.size(); i++)
             mRowMean(0, i) = mean[i];
         mMean = mean;
         mCmat = cmat;
-        mInvCmat = mCmat.inverse();
-        mCmatDet = mCmat.determinant();
+        mCmatRegularize = cmat_regularize;
+        Matrix tmpCmat = mCmat;
+
+        for(long i=0; i<mCmat.cols(); i++){
+            tmpCmat(i,i) += cmat_regularize;
+        }
+        mInvCmat = tmpCmat.inverse();
+        mCmatDet = tmpCmat.determinant();
     }
 public:
     ClusterModel(){}
@@ -42,15 +50,13 @@ public:
         const Feature & mean,
         const Matrix & cmat,
         const std::string & modelKey,
-        const std::vector<size_t> & in_range_feature_s_index
-        ):  mMean(mean),
-            mCmat(cmat),
-            mModelKey(modelKey),
+        const std::vector<size_t> & in_range_feature_s_index,
+        AxisType cmat_regularize = 0
+        ):  mModelKey(modelKey),
             m_in_range_feature_s_index(in_range_feature_s_index)
     {
-        set_mean_cmat(mean, mCmat);
+        set_parameters(mean, cmat, cmat_regularize);
     }
-
     auto eval(Feature feature) -> AxisType {
         auto rowVec = feature_sub_mean_to_rowVector(feature);
         auto colVec = feature_sub_mean_to_colVector(feature);
@@ -59,11 +65,14 @@ public:
         result = (AxisType)exp( -0.5* mahalanDistance) / sqrt( pow(2 * _pi_, feature.size()) * mCmatDet );
         return result;
     }
+    auto set_regularize(AxisType cmat_regularize) -> void {
+        set_parameters(mMean, mCmat, cmat_regularize);
+    }
     auto cmean()-> const RowVector & {return mRowMean;}
     auto mean() -> const Feature & {return mMean;}
     auto cov_mat() -> const Matrix & {return mCmat;}
     auto model_key() -> const string & {return mModelKey;}
-    auto in_range_data_index() -> const std::vector<size_t> & {return m_in_range_feature_s_index;}
+    auto get_data_index() -> const std::vector<size_t> & {return m_in_range_feature_s_index;}
 
 private:
     auto feature_sub_mean_to_rowVector(const Feature &feature) -> Matrix {
