@@ -16,9 +16,10 @@ namespace glassfire{
         virtual ~ScorerSetBase(){}
         virtual auto calc_scores(const Feature & feature)
                         -> std::map<AxisType, std::string, std::greater<AxisType>>  =0;
-        virtual auto get_model_set()
+        virtual auto get_model_set(AxisType regularize)
                         -> std::vector<ClusterModel<AxisType, FeatureInfo>> =0;
-        virtual auto query(const Feature & feature, AxisType box_distance)
+
+        virtual auto query(const Feature & feature, AxisType regularize, int nearest_count = -1)
                         -> std::tuple<bool, AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>, std::string> = 0;
     };
     //===================================
@@ -60,30 +61,35 @@ namespace glassfire{
             return retval;
         }
 
-        auto get_model_set() -> std::vector<ClusterModel> {
-            std::vector<ClusterModel> retval;
+        auto get_model_set(AxisType regularize) -> std::vector<ClusterModel> {
+            std::vector<ClusterModel> result;
             for(auto & iter: *mCentroidListPtr){
-                retval.push_back(iter.get_model());
+                auto model = iter.get_model(regularize);
+                result.push_back(model);
             }
-            return retval;
+            return result;
         }
 
         auto query(
-            const Feature & feature,
-            AxisType box_distance
+            const Feature & feature, AxisType regularize, int nearest_count = -1
             ) -> std::tuple<bool, AxisType, glassfire::ClusterModel<AxisType, FeatureInfo>, std::string> {
 
             auto rtreeFeature = RtreeFeature(feature);
 
+            if (nearest_count == -1){
+                nearest_count = 2 * Dimension * ceil(sqrt((AxisType)Dimension));
+            }
             std::vector<CentroidRtreeValue> result_s;
             mCentroidRtreePtr->query(
-                    bgi::intersects(rtreeFeature.createBox(box_distance)), back_inserter(result_s)
+                    bgi::nearest((RtreePoint)rtreeFeature, nearest_count), back_inserter(result_s)
             );
 
             auto centroidMap = std::map<AxisType, ClusterModel, std::greater<AxisType>>();
             for(auto & crv_iter: result_s){
-                auto score = crv_iter.second->scoreOfFeature(feature);
-                centroidMap.insert({ score, crv_iter.second->get_model() });
+                auto model = crv_iter.second->get_model(regularize);
+                //auto score = crv_iter.second->scoreOfFeature(feature);
+                auto score = model.eval(feature);
+                centroidMap.insert({ score, model });
             }
             if(centroidMap.size()==0){
                 return std::make_tuple(false, -1, glassfire::ClusterModel<AxisType,FeatureInfo>(), "Cluster not in range!");

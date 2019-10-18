@@ -20,7 +20,7 @@ private:
     RowVector   mRowMean;
     Feature     mMean;
 
-    Matrix      mCmat;
+    Matrix      mCmat, mRegularizedCmat;
     AxisType    mCmatRegularize;
     Matrix      mInvCmat;
     AxisType    mCmatDet;
@@ -35,13 +35,13 @@ private:
         mMean = mean;
         mCmat = cmat;
         mCmatRegularize = cmat_regularize;
-        Matrix tmpCmat = mCmat;
+        mRegularizedCmat = mCmat;
 
         for(long i=0; i<mCmat.cols(); i++){
-            tmpCmat(i,i) += cmat_regularize;
+            mRegularizedCmat(i,i) += cmat_regularize;
         }
-        mInvCmat = tmpCmat.inverse();
-        mCmatDet = tmpCmat.determinant();
+        mInvCmat = mRegularizedCmat.inverse();
+        mCmatDet = mRegularizedCmat.determinant();
     }
 public:
     ClusterModel(){}
@@ -51,9 +51,10 @@ public:
         const Matrix & cmat,
         const std::string & modelKey,
         const std::vector<size_t> & in_range_feature_s_index,
-        AxisType cmat_regularize = 0
+        AxisType cmat_regularize
         ):  mModelKey(modelKey),
-            m_in_range_feature_s_index(in_range_feature_s_index)
+            m_in_range_feature_s_index(in_range_feature_s_index),
+            mCmatRegularize(cmat_regularize)
     {
         set_parameters(mean, cmat, cmat_regularize);
     }
@@ -70,7 +71,7 @@ public:
     }
     auto cmean()-> const RowVector & {return mRowMean;}
     auto mean() -> const Feature & {return mMean;}
-    auto cov_mat() -> const Matrix & {return mCmat;}
+    auto cov_mat() -> const Matrix & {return mRegularizedCmat;}
     auto model_key() -> const string & {return mModelKey;}
     auto get_data_index() -> const std::vector<size_t> & {return m_in_range_feature_s_index;}
 

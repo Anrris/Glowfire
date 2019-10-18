@@ -126,10 +126,10 @@ public:
     }
 
     auto count_in_range_feature_s(CentroidRtree & centroidRtreeRef, bool using_box_len = true) -> void {
-        std::vector<CentroidRtreeValue> nearest_result;
 
         // Query the nearest Centroid
         // The centroid itself is included inside the centroidRtree(Ref)
+        std::vector<CentroidRtreeValue> nearest_result;
         centroidRtreeRef.query(bgi::nearest((RtreePoint)*this, 2), std::back_inserter(nearest_result));
 
         AxisType query_box_len = m_box_len;
@@ -223,13 +223,6 @@ public:
                 }
             }
 
-            //if(need_regularize_cmat){
-            //    // Regularize the covariance matrix by using the distance of the nearest data point.
-            //    for (int idx = 0; idx < tmpCmat.rows(); idx++){
-            //        tmpCmat(idx, idx) += m_distance_to_nearest_data_point;
-            //    }
-            //}
-
             diffCmat = mCmat - tmpCmat;
 
             mCmat = tmpCmat;
@@ -261,12 +254,15 @@ public:
         return max_diff;
     }
 
-    auto get_model() -> ClusterModel {
+    auto get_model(AxisType regularize = 0) -> ClusterModel {
+        if (regularize < 0)
+            throw std::runtime_error(":regularize: must be positive.");
         return ClusterModel(
                     this->getFeature(),
                     getCovariantMatrix(),
                     mCentroidKeyStr,
-                    m_in_range_feature_s_index
+                    m_in_range_feature_s_index,
+                    regularize
                     );
     }
 
