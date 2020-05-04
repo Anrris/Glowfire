@@ -1,3 +1,8 @@
 .vscode/
 build/
 .DS_Store
+*.so
+*.egg-info
+__pycache__
+*.gz
+external/_src/
