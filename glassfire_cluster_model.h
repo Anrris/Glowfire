@@ -69,6 +69,7 @@ public:
     auto set_regularize(AxisType cmat_regularize) -> void {
         set_parameters(mMean, mCmat, cmat_regularize);
     }
+    auto count()-> const size_t {return m_in_range_feature_s_index.size();}
     auto cmean()-> const RowVector & {return mRowMean;}
     auto mean() -> const Feature & {return mMean;}
     auto cov_mat() -> const Matrix & {return mRegularizedCmat;}
