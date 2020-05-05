@@ -7,9 +7,7 @@ from external.get_include_paths import *
 module_glassfire =\
     Extension(
         'glassfire', 
-        sources = [
-            'glassfire.cpp'
-        ],
+        sources = [ 'glassfire.cpp' ],
         include_dirs=[
             get_pybind_include(user=True),
             get_include(

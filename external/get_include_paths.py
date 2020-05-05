@@ -9,6 +9,12 @@ class get_pybind_include(object):
         self.user = user
 
     def __str__(self):
+        import imp, os
+        try:
+            imp.find_module('pybind11')
+        except ImportError:
+            os.system('pip install pybind11')
+
         import pybind11
         return pybind11.get_include(self.user)
 
