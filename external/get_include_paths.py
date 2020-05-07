@@ -39,6 +39,7 @@ class get_include(object):
 
     def __str__(self):
         import pybind11,os,tarfile,zipfile
+        from urllib.request import Request, urlopen
 
         cpp_external_root = self.local
         if not os.path.exists(cpp_external_root):
@@ -51,7 +52,11 @@ class get_include(object):
 
         import os
         if not os.path.exists(filepath):
-            os.system(f'wget {self.url} -O {filepath}')
+            req = Request(self.url, headers={'User-Agent': 'Mozilla/5.0'})
+            tarobj = urlopen(req).read()
+            with open(filepath, 'wb') as f:
+                f.write(tarobj)
+
 
         folderpath = cpp_external_root+self.extracted_folder
         if not os.path.exists(folderpath):
