@@ -46,18 +46,20 @@ class web2local(object):
                 f.write(tarobj)
 
         extract_folderpath = cwd / to_local / extract_to
+        import platform
+        if platform.system() == 'Windows':
+            extract_folderpath = cwd / to_local
 
-        if not os.path.exists(extract_folderpath):
+        if not os.path.exists(cwd / to_local / extract_to):
             print('Extracting to:', extract_folderpath)
             if extract_method == 'gz':
                 tf = tarfile.open(filepath)
-                tf.extractall(path=extract_folderpath)
+                print(tf.extractall(path=extract_folderpath))
             elif extract_method == 'zip':
                 with zipfile.ZipFile(filepath, 'r') as zip_ref:
-                    zip_ref.extractall(extract_folderpath)
+                    print(zip_ref.extractall(extract_folderpath))
 
         folderpath = extract_folderpath
-        import platform
         if platform.system() == 'Windows':
             folderpath = folderpath / extract_to
         self.folderpath = str(folderpath)
