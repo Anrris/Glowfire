@@ -115,7 +115,6 @@ PYBIND11_MODULE(glassfire, m) {
         .def("set_regularize", &Cluster::ClusterModel::set_regularize)
         ;
 
-
     py::class_<Cluster>(m, "Cluster")
         .def(py::init<Eigen::MatrixXd, std::vector<std::string>, std::string>(), py::arg("input"), py::arg("info"), py::arg("loading_type"))
         .def("run", &Cluster::run, py::arg("box_len"), py::arg("using_box_len"))
