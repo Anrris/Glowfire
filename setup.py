@@ -16,7 +16,7 @@ module_glassfire =\
             web2local(
                 from_url='https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz',
                 to_local='external',
-                extract_to='boost_1_72_0/',
+                extract_to='boost_1_72_0',
                 extract_method='gz'
             ),
             web2local(
