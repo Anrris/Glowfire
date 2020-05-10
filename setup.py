@@ -11,8 +11,6 @@ module_glassfire =\
         sources = [ 'glassfire.cpp' ],
         include_dirs=[
             pybind11_path(user=True),
-            #r'C:\\Users\\anrri\\Git\\Glassfire\\external\\boost_1_72_0\\boost_1_72_0\\',
-            #r'C:\\Users\\anrri\\Git\\glassfire\\external\\eigen-3.3.7\\eigen-3.3.7\\',
             web2local(
                 from_url='https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz',
                 to_local='external',
