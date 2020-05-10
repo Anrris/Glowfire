@@ -15,7 +15,6 @@ namespace glassfire
 template<typename AxisType, typename FeatureInfo>
 class ClassifierBase{
     typedef vector<AxisType> Feature;
-    typedef ClusterModel<AxisType, FeatureInfo>            ClusterModel;
 public:
     typedef std::vector<std::tuple<size_t, AxisType, FeatureInfo, std::string, Feature>> DataQueryReturnType;
 
@@ -28,7 +27,7 @@ public:
                     bool     using_centroid_distance = true
                     ) -> std::shared_ptr<ScorerSetBase<AxisType, FeatureInfo>> =0 ;
 
-    virtual auto query_data(ClusterModel & cm, AxisType box_size) -> DataQueryReturnType =0 ;
+    virtual auto query_data(ClusterModel<AxisType, FeatureInfo> & cm, AxisType box_size) -> DataQueryReturnType =0 ;
 };
 
 //===================================
@@ -63,9 +62,9 @@ public:
     typedef typename GlassfireType::ScorerSet               ScorerSet;
 
     typedef std::unordered_set<size_t>                      CentroidHashSet;
-    typedef ClusterModel<AxisType, FeatureInfo>             ClusterModel;
 
 private:
+    //using ClusterModel = ClusterModel<AxisType, FeatureInfo>;
     Rtree               mRtreeRoot;
     RtreeFeature_s      mRtreeFeature_s;
     CentroidListPtr     mCentroidListPtr;
@@ -86,7 +85,7 @@ public:
         mRtreeRoot.insert({mRtreeFeature_s.back(), mRtreeRoot.size()});
     }
 
-    auto query_data(ClusterModel & cm, AxisType box_size) -> DataQueryReturnType{
+    auto query_data(ClusterModel<AxisType, FeatureInfo> & cm, AxisType box_size) -> DataQueryReturnType{
 
         RtreeFeature rtfeat(cm.mean());
 
@@ -273,10 +272,10 @@ public:
         return std::make_shared<ScorerSet>(ScorerSet(mCentroidListPtr, mCentroidRtreePtr));
     }
 };
-//-----------------------------------
-//--- Implementation of Classifier
-//===================================
-
+////-----------------------------------
+////--- Implementation of Classifier
+////===================================
+//
 template<typename AxisType, typename FeatureInfo, size_t Dimension>
 class ClassifierFactory{
     typedef std::shared_ptr<ClassifierBase<AxisType, FeatureInfo>> ClassifierBasePtr;
