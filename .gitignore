@@ -8,3 +8,4 @@ __pycache__
 external/
 .ipynb_checkpoints/
 *.pyd
+*.pyc
