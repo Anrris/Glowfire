@@ -1,1 +1,0 @@
-At installation time, external sources, Eigen and Boost, will be downloaded into this folder. 
