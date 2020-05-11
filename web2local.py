@@ -15,7 +15,6 @@ class pybind11_path(object):
             os.system('pip install pybind11')
 
         import pybind11
-        print('>>>', pybind11.get_include(self.user))
         return pybind11.get_include(self.user)
 
 
@@ -25,19 +24,21 @@ class web2local(object):
         to_local,
         extract_to,
         extract_method,
-        extracted_filename=None):
+        using_user_home=False):
 
         import os,tarfile,zipfile
         from urllib.request import Request, urlopen
         from pathlib import Path
 
-        cwd = Path.cwd()
+        root = Path.cwd()
+        if using_user_home:
+            root = Path.home()
 
-        if not os.path.exists(cwd / to_local):
-            os.makedirs(cwd / to_local)
+        if not os.path.exists(root / to_local):
+            os.makedirs(root / to_local)
 
         filename = Path(from_url).name
-        filepath = cwd/to_local/filename
+        filepath = root/to_local/filename
 
         if not os.path.exists(filepath):
             req = Request(from_url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -45,9 +46,9 @@ class web2local(object):
             with open(filepath, 'wb') as f:
                 f.write(tarobj)
 
-        extract_folderpath = cwd / to_local
+        extract_folderpath = root / to_local
 
-        if not os.path.exists(cwd / to_local / extract_to):
+        if not os.path.exists(root / to_local / extract_to):
             print('Extracting to:', extract_folderpath)
             if extract_method == 'gz':
                 tf = tarfile.open(filepath)
