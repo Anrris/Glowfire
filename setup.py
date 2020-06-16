@@ -13,14 +13,14 @@ module_glassfire =\
             pybind11_path(user=True),
             web2local(
                 from_url='https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz',
-                to_local='.glassfire_external',
+                to_local='.cpp_external',
                 extract_to='boost_1_72_0',
                 extract_method='gz',
                 using_user_home=True
             ),
             web2local(
                 from_url='https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz',
-                to_local='.glassfire_external',
+                to_local='.cpp_external',
                 extract_to='eigen-3.3.7',
                 extract_method='gz',
                 using_user_home=True
