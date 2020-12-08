@@ -116,10 +116,25 @@ PYBIND11_MODULE(glassfire, m) {
         ;
 
     py::class_<Cluster>(m, "Cluster")
-        .def(py::init<Eigen::MatrixXd, std::vector<std::string>, std::string>(), py::arg("input"), py::arg("info"), py::arg("loading_type"))
-        .def("run", &Cluster::run, py::arg("box_len"), py::arg("using_box_len"))
-        .def("query_model", &Cluster::query_model, py::arg("input"), py::arg("regularize"))
-        .def("query_data", &Cluster::query_data, py::arg("model"), py::arg("box_len"))
-        .def("get_models", &Cluster::get_models, py::arg("regularize"))
+        .def(py::init<Eigen::MatrixXd, std::vector<std::string>, std::string>(),
+          py::arg("input"),
+          py::arg("info")=std::vector<Cluster::FeatureInfo>(),
+          py::arg("loading_type")="row"
+        )
+        .def("run", &Cluster::run,
+          py::arg("box_len"),
+          py::arg("using_box_len")
+        )
+        .def("query_model", &Cluster::query_model,
+          py::arg("input"),
+          py::arg("regularize")
+        )
+        .def("query_data", &Cluster::query_data,
+          py::arg("model"),
+          py::arg("box_len")
+        )
+        .def("get_models", &Cluster::get_models,
+          py::arg("regularize")
+        )
         ;
 }
