@@ -10,7 +10,7 @@ Academic research of using this algorithm including the source code must referen
 # Install
 ## Install from git
 ```
-> pip install git+https://github.com/Anrris/glassfire
+> pip install git+https://github.com/yuan-yen/glassfire
 ```
 
 ## Install from downloaded repository
