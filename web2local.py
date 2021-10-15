@@ -41,10 +41,18 @@ class web2local(object):
         filepath = root/to_local/filename
 
         if not os.path.exists(filepath):
-            req = Request(from_url, headers={'User-Agent': 'Mozilla/5.0'})
-            tarobj = urlopen(req).read()
-            with open(filepath, 'wb') as f:
-                f.write(tarobj)
+            #req = Request(from_url, headers={'User-Agent': 'Mozilla/5.0'})
+            #tarobj = urlopen(req).read()
+            #with open(filepath, 'wb') as f:
+            #    f.write(tarobj)
+            import requests
+
+            #target_path = 'boost.tar.gz'
+
+            response = requests.get(from_url, stream=True)
+            if response.status_code == 200:
+                with open(filepath, 'wb') as f:
+                    f.write(response.raw.read())
 
         extract_folderpath = root / to_local
 

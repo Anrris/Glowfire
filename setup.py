@@ -12,7 +12,7 @@ module_glassfire =\
         include_dirs=[
             pybind11_path(user=True),
             web2local(
-                from_url='https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz',
+                from_url="https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz",
                 to_local='.cpp_external',
                 extract_to='boost_1_72_0',
                 extract_method='gz',

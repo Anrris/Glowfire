@@ -25,7 +25,7 @@ public:
     typedef glassfire::ClassifierBase<AxisType, FeatureInfo>::DataQueryReturnType DataQueryReturnType;
 private:
     std::vector<ClassifierBasePtr> mClassifierBaseSet =
-        glassfire::ClassifierFactory<double, FeatureInfo, 10>().create();
+        glassfire::ClassifierFactory<double, FeatureInfo, 40>().create();
 
     ScorerSetBasePtr mScorerSetBase;
     ssize_t m_dimension;
